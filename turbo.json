@@ -1,0 +1,53 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  "globalDependencies": [".prettierrc.json"],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "lint": {
+      "dependsOn": ["transit"]
+    },
+    "typecheck": {
+      "dependsOn": ["transit"]
+    },
+    "test": {
+      "dependsOn": ["transit"],
+      "outputs": ["coverage/**"],
+      "env": ["VITE_*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "build": {
+      "dependsOn": ["transit"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "build-storybook": {
+      "dependsOn": ["transit"],
+      "outputs": ["storybook-static/**"],
+      "env": ["VITE_*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": ["VITE_*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "dev:mock": {
+      "cache": false,
+      "persistent": true,
+      "env": ["VITE_*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true,
+      "env": ["VITE_*"]
+    },
+    "lint:fix": {
+      "cache": false
+    }
+  }
+}

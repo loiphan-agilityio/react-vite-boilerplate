@@ -5,7 +5,8 @@ storybook-static/
 *storybook.log
 *.tsbuildinfo
 .vitest/
+.turbo/
 .env.local
 .env.*.local
 # Written by `msw init` (postinstall) from the installed msw, so it always matches its version.
-public/mockServiceWorker.js
+**/public/mockServiceWorker.js

@@ -1,4 +1,22 @@
-# pnpm settings for this single-package project (pnpm 11 reads them from this file).
+# pnpm settings for this workspace (pnpm 11 reads them from this file).
+packages:
+  - 'apps/*'
+  - 'packages/*'
+# One version for every dependency declared by 2+ workspace packages; declare these as `catalog:`
+# in every package.json. React and sonner must exist exactly once: sonner's toast store is
+# module-level, so toast() called in an app and <Toaster> from @repo/ui must share one instance.
+catalog:
+  '@types/react': ^19.3.0
+  '@types/react-dom': ^19.3.0
+  eslint: ^10.13.0
+  lucide-react: ^1.59.0
+  prettier: ^3.9.10
+  react: ^19.3.1
+  react-dom: ^19.3.1
+  shadcn: ^4.22.1
+  sonner: ^2.0.8
+  tailwindcss: ^4.3.3
+  typescript: ~6.0.3
 peerDependencyRules:
   allowedVersions:
     # eslint-plugin-jsx-a11y 6.10.2 (last release 2024-10) declares eslint <=9 but works on
