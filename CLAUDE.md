@@ -126,3 +126,12 @@ Not created yet, create only when the trigger fires:
 | `@repo/constants` | Only values shared across apps | A value really shared | Do not make it a junk drawer; prefer colocating. |
 | `@repo/hooks` | Non-UI React hooks (UI hooks go in `@repo/ui/hooks`) | A hook needed by 2+ apps | |
 | `@repo/storybook-config` | The shared `.storybook` | 3+ apps with an identical `.storybook` | |
+
+<!-- template-only -->
+## Project generator (`create/`)
+
+`create/` is the CLI that makes new projects from this repo, with an optional authentication overlay
+(`create/templates/auth`). See `create/README.md`. After changing any file listed in
+`create/templates/auth/patches.json`, or anything in `create/`, run `node --test create/index.test.js`.
+The CLI removes this block from the projects it generates.
+<!-- /template-only -->

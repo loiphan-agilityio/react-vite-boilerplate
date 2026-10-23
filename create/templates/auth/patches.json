@@ -1,0 +1,62 @@
+[
+  {
+    "file": "apps/web/src/lib/runtime.ts",
+    "find": "import { ApiClient } from '@/lib/api/client';",
+    "replace": "import { ApiClient } from '@/lib/api/client';\nimport { tokenStore } from '@/lib/api/token';"
+  },
+  {
+    "file": "apps/web/src/lib/runtime.ts",
+    "find": " * `AuthToken.none` sends no token; an app with sign-in provides `AuthToken.fromGetter(...)`.",
+    "replace": " * `AuthToken.fromGetter(tokenStore.get)` sends the signed-in user's token (see features/auth)."
+  },
+  {
+    "file": "apps/web/src/lib/runtime.ts",
+    "find": "Layer.mergeAll(AppConfig.layer, AuthToken.none)",
+    "replace": "Layer.mergeAll(AppConfig.layer, AuthToken.fromGetter(tokenStore.get))"
+  },
+  {
+    "file": "apps/web/src/app/routes.tsx",
+    "find": "import { HomePage } from './home-page';",
+    "replace": "import { authRoutes, protectedRoutes } from '@/features/auth/routes';\n\nimport { HomePage } from './home-page';"
+  },
+  {
+    "file": "apps/web/src/app/routes.tsx",
+    "find": " * `src/features/<name>/routes.tsx`.",
+    "replace": " * `src/features/<name>/routes.tsx`. A route that needs a signed-in user goes inside\n * `protectedRoutes([...])`; a public one goes next to `authRoutes()`."
+  },
+  {
+    "file": "apps/web/src/app/routes.tsx",
+    "find": "children: [{ index: true, Component: HomePage }],",
+    "replace": "children: [...authRoutes(), protectedRoutes([{ index: true, Component: HomePage }])],"
+  },
+  {
+    "file": "apps/web/src/mocks/handlers.ts",
+    "find": "import type { RequestHandler } from 'msw';",
+    "replace": "import type { RequestHandler } from 'msw';\n\nimport { createAuthHandlers } from '@/features/auth/mocks';"
+  },
+  {
+    "file": "apps/web/src/mocks/handlers.ts",
+    "find": "export const handlers: RequestHandler[] = [];",
+    "replace": "export const handlers: RequestHandler[] = [...createAuthHandlers()];"
+  },
+  {
+    "file": "apps/web/src/app/__tests__/home-page.test.tsx",
+    "find": "import { renderRoute } from '@/test/render';",
+    "replace": "import { mockToken } from '@/features/auth/mocks';\nimport { tokenStore } from '@/lib/api/token';\nimport { renderRoute } from '@/test/render';"
+  },
+  {
+    "file": "apps/web/src/app/__tests__/home-page.test.tsx",
+    "find": "describe('HomePage', () => {",
+    "replace": "describe('HomePage', () => {\n  // The home page is behind protectedRoutes().\n  beforeEach(() => {\n    tokenStore.set(mockToken);\n  });\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (none until the app has sign-in)",
+    "replace": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (runtime.ts wires it to tokenStore)\n    api/token.ts      tokenStore: the signed-in user's JWT in localStorage"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "  objects when a lazy route loads, so each router needs fresh ones.",
+    "replace": "  objects when a lazy route loads, so each router needs fresh ones.\n- **Auth** (`src/features/auth`): email + password → JWT bearer token. `tokenStore` keeps it,\n  `AuthToken.fromGetter(tokenStore.get)` in `runtime.ts` sends it. A route that needs a signed-in\n  user goes inside `protectedRoutes([...])` in `app/routes.tsx`; `RequireAuth` loads `/auth/me` and\n  sends everyone else to `/login?redirect=…`. A test that renders a protected route sets\n  `tokenStore.set(mockToken)` in `beforeEach`. The mock API accepts `demo@example.com` / `password`."
+  }
+]
