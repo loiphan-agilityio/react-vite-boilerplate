@@ -8,6 +8,9 @@ import { parseArgs } from 'node:util';
 
 const REPO = 'https://github.com/loiphan-agilityio/react-vite-boilerplate.git';
 
+/** What the mock API of the auth overlay accepts (features/auth/mocks.ts); index.test.js keeps them equal. */
+const DEMO_ACCOUNT = 'demo@example.com / password';
+
 const USAGE = `Usage: create-react-vite-turbo <dir> [--auth | --no-auth] [--from <local checkout>]`;
 
 const git = (...args) =>
@@ -105,6 +108,7 @@ const main = async () => {
 
   console.log(`\nCreated ${positionals[0]}${withAuth ? ' with authentication' : ''}. Next:\n`);
   console.log(`  cd ${positionals[0]}\n  git init\n  pnpm install\n  pnpm dev:mock`);
+  if (withAuth) console.log(`\nThen sign in with the demo account: ${DEMO_ACCOUNT}`);
 };
 
 main().catch((error) => {

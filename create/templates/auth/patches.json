@@ -50,6 +50,11 @@
     "replace": "describe('HomePage', () => {\n  // The home page is behind protectedRoutes().\n  beforeEach(() => {\n    tokenStore.set(mockToken);\n  });\n"
   },
   {
+    "file": "README.md",
+    "find": "## Check",
+    "replace": "## Sign in\n\nWith `pnpm dev:mock`, sign in with `demo@example.com` / `password` (the login page shows it too);\nany other email or password is rejected. With `pnpm dev`, use an account of your real backend.\nThe mock API is `apps/web/src/features/auth/mocks.ts`.\n\n## Check"
+  },
+  {
     "file": "apps/web/CLAUDE.md",
     "find": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (none until the app has sign-in)",
     "replace": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (runtime.ts wires it to tokenStore)\n    api/token.ts      tokenStore: the signed-in user's JWT in localStorage"

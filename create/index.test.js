@@ -16,6 +16,8 @@ describe('create-react-vite-turbo', () => {
   let tmp;
   let auth;
   let plain;
+  let authOutput;
+  let plainOutput;
 
   before(async () => {
     tmp = await mkdtemp(join(tmpdir(), 'rvb-'));
@@ -25,8 +27,10 @@ describe('create-react-vite-turbo', () => {
       [auth, '--auth'],
       [plain, '--no-auth'],
     ]) {
-      const { status, stderr } = run(dir, '--from', repo, flag);
+      const { status, stderr, stdout } = run(dir, '--from', repo, flag);
       assert.equal(status, 0, stderr);
+      if (dir === auth) authOutput = stdout;
+      else plainOutput = stdout;
     }
   });
   after(() => rm(tmp, { recursive: true, force: true }));
@@ -49,6 +53,21 @@ describe('create-react-vite-turbo', () => {
       read(auth, 'apps/web/src/lib/runtime.ts').includes('AuthToken.fromGetter(tokenStore.get)'),
     );
     assert.ok(read(auth, 'apps/web/src/app/routes.tsx').includes('protectedRoutes('));
+  });
+
+  it('with auth, shows the account the mock API accepts everywhere the user may look', () => {
+    const mocks = read(auth, 'apps/web/src/features/auth/mocks.ts');
+    const email = /email: '([^']+)'/.exec(mocks)[1];
+    const password = /mockPassword = '([^']+)'/.exec(mocks)[1];
+    for (const text of [
+      authOutput,
+      read(auth, 'apps/web/src/features/auth/components/LoginPage/index.tsx'),
+      read(auth, 'apps/web/CLAUDE.md'),
+      read(auth, 'README.md'),
+    ]) {
+      assert.ok(text.includes(email) && text.includes(password));
+    }
+    assert.ok(!plainOutput.includes(email) && !read(plain, 'README.md').includes(email));
   });
 
   it('refuses a folder that already exists', () => {
