@@ -117,10 +117,6 @@ jobs:
       statuses: write
     outputs:
       url: ${{ steps.app.outputs.url }}
-    defaults:
-      run:
-        # apps/web/netlify.toml holds the redirects and headers the deploy applies.
-        working-directory: apps/web
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
@@ -143,11 +139,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           # On a pull request github.sha is the merge commit; the checks list shows the head commit.
           SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        # Netlify's monorepo mode, from the root: --filter picks the web app, --dir is resolved
+        # against the root, and apps/web/netlify.toml (redirects, headers) applies.
         run: |
           alias=()
           if [[ -n "$PR_NUMBER" ]]; then alias=(--alias "pr-$PR_NUMBER"); fi
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --dir dist --site "$NETLIFY_SITE_ID" \
-            "${alias[@]}" --message "$GITHUB_SHA" --json | jq -r .deploy_url)"
+          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web --dir apps/web/dist \
+            --site "$NETLIFY_SITE_ID" "${alias[@]}" --message "$GITHUB_SHA" --json |
+            jq -r .deploy_url)"
           [[ "$url" == https://* ]]
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "App: $url" >> "$GITHUB_STEP_SUMMARY"
@@ -160,9 +159,9 @@ jobs:
         run: |
           alias=()
           if [[ -n "$PR_NUMBER" ]]; then alias=(--alias "pr-$PR_NUMBER"); fi
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --dir storybook-static \
-            --site "$NETLIFY_STORYBOOK_SITE_ID" "${alias[@]}" --message "$GITHUB_SHA" --json |
-            jq -r .deploy_url)"
+          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web \
+            --dir apps/web/storybook-static --site "$NETLIFY_STORYBOOK_SITE_ID" "${alias[@]}" \
+            --message "$GITHUB_SHA" --json | jq -r .deploy_url)"
           [[ "$url" == https://* ]]
           echo "Storybook: $url" >> "$GITHUB_STEP_SUMMARY"
 
@@ -200,9 +199,6 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    defaults:
-      run:
-        working-directory: apps/web
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
@@ -222,8 +218,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --dir dist --site "$NETLIFY_SITE_ID" \
-            --prod --message "$GITHUB_SHA" --json | jq -r .url)"
+          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web --dir apps/web/dist \
+            --site "$NETLIFY_SITE_ID" --prod --message "$GITHUB_SHA" --json | jq -r .url)"
           echo "App: $url" >> "$GITHUB_STEP_SUMMARY"
           # A commit status whose Details link in the checks list opens the live site.
           gh api "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" -f state=success \
@@ -232,6 +228,7 @@ jobs:
       - name: Publish Storybook
         if: ${{ env.NETLIFY_STORYBOOK_SITE_ID != '' }}
         run: |
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --dir storybook-static \
-            --site "$NETLIFY_STORYBOOK_SITE_ID" --prod --message "$GITHUB_SHA" --json | jq -r .url)"
+          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web \
+            --dir apps/web/storybook-static --site "$NETLIFY_STORYBOOK_SITE_ID" --prod \
+            --message "$GITHUB_SHA" --json | jq -r .url)"
           echo "Storybook: $url" >> "$GITHUB_STEP_SUMMARY"

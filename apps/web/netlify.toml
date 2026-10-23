@@ -1,6 +1,7 @@
 # Netlify hosting for apps/web. CI (.github/workflows/ci.yml) builds the app and runs
-# `netlify deploy --no-build --dir dist` from this folder, which reads the redirects and headers
-# below. [build] applies only when Netlify builds from git itself instead (base directory apps/web).
+# `netlify deploy --no-build --filter web --dir apps/web/dist` from the repository root, which
+# applies the redirects and headers below. [build] applies only when Netlify builds from git itself
+# instead (base directory apps/web).
 [build]
   # The mocked API: a new app has no backend yet. Once it has one, set VITE_API_URL and switch to
   # `pnpm build` (here and in CI).

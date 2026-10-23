@@ -123,8 +123,9 @@ since the lockfile is at the root. `apps/web` must keep all of these.
 1. **check** (lint, typecheck, unit tests with coverage, build, Storybook build) and **e2e**
    (`pnpm test:e2e` on the mock build) in parallel.
 2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to Netlify
-   as a draft (`pr-<number>--<site>` on a pull request), without building them again. It deploys
-   from `apps/web`, whose `netlify.toml` holds the redirects and headers.
+   as a draft (`pr-<number>--<site>` on a pull request), without building them again. It runs
+   `netlify deploy --filter web --dir apps/web/dist` from the root (Netlify's monorepo mode), and
+   `apps/web/netlify.toml` holds the redirects and headers.
 3. **e2e-deployed**: the same Playwright specs against the draft URL.
 4. **deploy-production** (push to `main`): the same files go live, only after the deployed e2e
    passed.
