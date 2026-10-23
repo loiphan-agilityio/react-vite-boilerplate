@@ -19,6 +19,10 @@ package.json            root scripts (turbo), lint-staged and commitlint config
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
 .husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint)
+.claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
+                        and a hook that runs Prettier on each file Claude writes (hooks/format.mjs).
+                        Claude Code reads it only in sessions started here; apps/web/.claude/
+                        settings.json does the same for sessions started in the app
 .prettierrc.json, .prettierignore, .gitignore, .gitattributes, skills-lock.json
 ```
 
