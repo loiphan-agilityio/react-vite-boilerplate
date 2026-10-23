@@ -18,7 +18,8 @@ export default defineConfig({
       exclude: ['**/*.test.{ts,tsx}', '**/*.stories.tsx'],
       thresholds: { lines: 80 },
     },
-    // .claude holds Claude Code skills, whose templates and examples contain their own tests.
-    exclude: [...configDefaults.exclude, '.claude/**'],
+    // .claude holds Claude Code skills, whose templates and examples contain their own tests;
+    // e2e/ holds the Playwright tests (`pnpm test:e2e`).
+    exclude: [...configDefaults.exclude, '.claude/**', 'e2e/**'],
   },
 });

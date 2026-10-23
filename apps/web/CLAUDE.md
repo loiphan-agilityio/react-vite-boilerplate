@@ -2,7 +2,8 @@
 
 Single-page app: React 19, Vite 8, TypeScript 6 (strict), Effect 4, TanStack Query 5,
 React Hook Form 7, shadcn/ui on Tailwind CSS 4, React Router 8. Tests: Vitest 5, React Testing
-Library, MSW 3. Package manager: pnpm. No SSR, no Next.js.
+Library, MSW 3; end-to-end: Playwright. Deployed to Netlify (`netlify.toml`) by the monorepo's
+CI/CD (`../../CLAUDE.md`). Package manager: pnpm. No SSR, no Next.js.
 
 This app (package `web`) is part of a pnpm + Turborepo monorepo (see `../../CLAUDE.md`): run the
 commands below from `apps/web`; the root `pnpm check` runs every package through turbo.
@@ -15,10 +16,11 @@ commands below from `apps/web`; the root `pnpm check` runs every package through
 | `pnpm lint` | ESLint (`--max-warnings=0`, also enforces the import rules below) and `prettier --check`. `pnpm lint:fix` fixes what it can and formats; run it before `pnpm check`. |
 | `pnpm typecheck` | `tsc -b` |
 | `pnpm test` | Vitest once, with coverage (≥ 80% lines in `src/features` and `src/lib`). `pnpm test:watch` to watch. |
-| `pnpm build` | Typecheck + production build. |
+| `pnpm test:e2e` | Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`; with `E2E_BASE_URL` set, tests that URL instead. `pnpm test:e2e:install` downloads Chromium once per machine. |
+| `pnpm build` | Typecheck + production build. `pnpm build:mock` builds with MSW on (`.env.mock`): what CI deploys while the app has no backend. A browser that blocks service workers still gets the app, unmocked, with a console warning. |
 | `pnpm storybook` | Storybook on port 6006 (stories render inside `.storybook/story-providers.tsx`, MSW on). |
 | `pnpm build-storybook` | Static Storybook build; fails when a story does not compile. |
-| `pnpm check` | All five gates: lint, typecheck, test, build, Storybook build. **Run before calling work done.** |
+| `pnpm check` | All six gates: lint, typecheck, test, build, Storybook build, e2e. **Run before calling work done.** |
 
 Run each command on its own, exactly as written (no pipes or redirects): the tool result already holds the output and the exit code.
 
@@ -53,6 +55,9 @@ src/
     api/run.ts        runEffect(effect, signal): Effect → Promise for TanStack Query
   mocks/            handlers.ts (all feature handlers), server.ts (Vitest), browser.ts (dev)
   test/             setup.ts, render.tsx (renderRoute, renderWithProviders)
+e2e/                Playwright specs: home.spec.ts, then <feature>.spec.ts per feature
+playwright.config.ts  the e2e runner: mock build + `vite preview`, or E2E_BASE_URL
+netlify.toml        Netlify: SPA redirect, cache headers, build command for git-based builds
 ```
 
 The UI kit lives in `packages/ui` (`@repo/ui`): shadcn components in `packages/ui/src/components`
@@ -133,6 +138,19 @@ ApiClient → effect/http`
 - Query by role and label, not test ids. Test all four states and every form error path.
 - After a navigation to a lazy route, wait for the new page (`findBy*`) before asserting:
   until the route loads, the old page is still on screen.
+
+## End-to-end tests
+
+- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user
+  takes through the real app (open it from the header, read the list, submit the form, see the
+  result). Edge cases, error states and 422s stay in the unit tests.
+- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with
+  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on
+  data a backend would hold.
+- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first
+  `await expect(locator).toBeVisible()`; never `waitForTimeout`.
+- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes
+  localhost or a port.
 
 ## Stories
 

@@ -8,6 +8,8 @@
       "Bash(pnpm typecheck)",
       "Bash(pnpm test)",
       "Bash(pnpm test *)",
+      "Bash(pnpm test:e2e)",
+      "Bash(pnpm test:e2e:install)",
       "Bash(pnpm build)",
       "Bash(pnpm build-storybook)",
       "Bash(pnpm check)",

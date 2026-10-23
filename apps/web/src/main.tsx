@@ -9,10 +9,15 @@ import { AppProviders } from '@/app/providers';
 import { createRoutes } from '@/app/routes';
 import { config } from '@/lib/config';
 
-// import.meta.env.DEV is false in `vite build`, so MSW is tree-shaken out of production.
-if (import.meta.env.DEV && config.apiMocking) {
+// On in `pnpm dev:mock` and in `pnpm build:mock` (the build CI deploys while the app has no
+// backend). A build without VITE_API_MOCKING=true never loads the MSW chunk.
+if (config.apiMocking) {
   const { worker } = await import('@/mocks/browser');
-  await worker.start({ onUnhandledFrame: 'bypass' });
+  // A browser that refuses service workers (private windows, managed policies) still gets the
+  // app: requests then reach the network, and data screens show their error state.
+  await worker.start({ onUnhandledFrame: 'bypass' }).catch((error: unknown) => {
+    console.warn('[MSW] Mocking is off: the service worker did not start.', error);
+  });
 }
 
 const router = createBrowserRouter(createRoutes());

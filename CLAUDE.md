@@ -18,6 +18,7 @@ packages/
 package.json            root scripts (turbo), lint-staged and commitlint config
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
+.github/workflows/ci.yml  CI/CD: gates, e2e, Netlify deploy of apps/web, e2e on it, production
 .husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint)
 .claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
                         and a hook that runs Prettier on each file Claude writes (hooks/format.mjs).
@@ -38,7 +39,8 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm test` | Vitest, with coverage. |
 | `pnpm build` | Production build (apps only; packages have no build). |
 | `pnpm build-storybook` | Static Storybook build. |
-| `pnpm check` | All five gates (`turbo run lint typecheck test build build-storybook`). **Run before calling work done.** |
+| `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
+| `pnpm check` | All six gates (`turbo run lint typecheck test build build-storybook test:e2e`). **Run before calling work done.** |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
   script from inside the package (`cd apps/web`, then `pnpm test:watch`).
@@ -114,6 +116,34 @@ since the lockfile is at the root. `apps/web` must keep all of these.
   (ESLint and Prettier on the staged files), then `pnpm typecheck` (turbo, every package).
   Fix what they report; never commit with `--no-verify`.
 
+## CI/CD and deploy
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to `main`, from the root:
+
+1. **check** (lint, typecheck, unit tests with coverage, build, Storybook build) and **e2e**
+   (`pnpm test:e2e` on the mock build) in parallel.
+2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to Netlify
+   as a draft (`pr-<number>--<site>` on a pull request), without building them again. It deploys
+   from `apps/web`, whose `netlify.toml` holds the redirects and headers.
+3. **e2e-deployed**: the same Playwright specs against the draft URL.
+4. **deploy-production** (push to `main`): the same files go live, only after the deployed e2e
+   passed.
+
+GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
+`Checks: lint, typecheck, unit, build`, `E2E: mock build`, `Deploy: Netlify draft`,
+`E2E: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
+A required status check in branch protection matches that name, so after renaming a job, select
+it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
+`Prod - Webapp Deployment`, whose Details link in the checks list opens the deploy (a job's own
+Details link opens its log).
+
+Setup, once per repository: create the Netlify site(s), then in the GitHub repository set the
+secret `NETLIFY_AUTH_TOKEN` and the variable `NETLIFY_SITE_ID` (`NETLIFY_STORYBOOK_SITE_ID` for
+a Storybook site). Without `NETLIFY_SITE_ID` the deploy jobs are skipped. Once the app has a
+backend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/web/dist/` from
+there as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to
+`build` in `apps/web/netlify.toml`.
+
 ## Package roadmap
 
 Not created yet, create only when the trigger fires:
@@ -133,6 +163,6 @@ Not created yet, create only when the trigger fires:
 
 `create/` is the CLI that makes new projects from this repo, with an optional authentication overlay
 (`create/templates/auth`). See `create/README.md`. After changing any file listed in
-`create/templates/auth/patches.json`, or anything in `create/`, run `node --test create/index.test.js`.
-The CLI removes this block from the projects it generates.
+`create/templates/auth/patches.json`, or anything in `create/`, run `node --test create/index.test.js`
+(the **check** job of CI runs it too). The CLI removes this block from the projects it generates.
 <!-- /template-only -->
