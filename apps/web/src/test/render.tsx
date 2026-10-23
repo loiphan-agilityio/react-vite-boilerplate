@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
-import { createMemoryRouter, type RouteObject } from 'react-router';
+import { createMemoryRouter, parsePath, type RouteObject } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 
 import { createRoutes } from '@/app/routes';
@@ -29,4 +29,5 @@ export const renderRoute = (path: string) => renderRouter(createRoutes(), path);
 
 /** Renders one component inside the app's providers and a router (so `Link` works). */
 export const renderWithProviders = (ui: ReactElement, { path = '/' } = {}) =>
-  renderRouter([{ path, element: ui }], path);
+  // A route matches the pathname only: `path` may also carry a query string or a hash.
+  renderRouter([{ path: parsePath(path).pathname ?? '/', element: ui }], path);
