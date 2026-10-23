@@ -11,14 +11,16 @@ import { meQueryOptions } from '../../queries';
 
 /** Layout for routes that need a signed-in user; see `protectedRoutes` in `routes.tsx`. */
 export const RequireAuth = () => {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hasToken = tokenStore.get() !== null;
   const me = useQuery({ ...meQueryOptions(), enabled: hasToken });
 
   if (!hasToken || me.error?._tag === 'UnauthorizedError') {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(pathname + search)}`} replace />;
+    return (
+      <Navigate to={`/login?redirect=${encodeURIComponent(pathname + search + hash)}`} replace />
+    );
   }
 
   if (me.isPending) {

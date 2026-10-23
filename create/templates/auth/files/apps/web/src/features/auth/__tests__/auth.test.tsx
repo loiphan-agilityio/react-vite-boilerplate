@@ -39,6 +39,17 @@ describe('authentication', () => {
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
   });
 
+  it('returns to the query string and hash of the page after signing in', async () => {
+    const { user, router } = renderRoute('/?tab=open#top');
+    await signIn(user);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+    expect(router.state.location).toMatchObject({
+      pathname: '/',
+      search: '?tab=open',
+      hash: '#top',
+    });
+  });
+
   it('does not follow a redirect to another site', async () => {
     const { user, router } = renderRoute('/login?redirect=%2F%2Fevil.example');
     await signIn(user);

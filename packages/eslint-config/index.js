@@ -46,7 +46,8 @@ const restrictedPaths = [
 // A feature reaches another feature only through its public surface (schemas, model, queries,
 // routes); its api, mocks and components are internal. Imports inside a feature are relative.
 const featureBoundary = {
-  regex: String.raw`^(@/features/[^/]+|(\.\./)+[^./][^/]*)/(api|mocks|components)(/|$)`,
+  // The extension is optional: tsconfig allows `.ts` imports, and `.js` resolves to `.ts`.
+  regex: String.raw`^(@/features/[^/]+|(\.\./)+[^./][^/]*)/(api|mocks|components)(\.[cm]?[jt]sx?)?(/|$)`,
   message:
     "Another feature's api, mocks and components are internal: import its schemas, model, queries or routes, or move shared markup to src/components.",
 };

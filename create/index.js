@@ -39,7 +39,8 @@ const copyWorkingTree = (from, dest) => {
   return copyFiles(
     from,
     dest,
-    files.filter((file) => file && existsSync(join(from, file))),
+    // An untracked nested repository (a clone, a git worktree) is listed as `dir/`: skip it.
+    files.filter((file) => file && !file.endsWith('/') && existsSync(join(from, file))),
   );
 };
 

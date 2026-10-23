@@ -76,6 +76,23 @@ describe('create-react-vite-turbo', () => {
     assert.match(stderr, /already exists/);
   });
 
+  it('copies a working tree that holds a nested git repository, without that repository', async () => {
+    const source = join(tmp, 'with-nested');
+    await mkdir(join(source, 'nested'), { recursive: true });
+    await writeFile(join(source, 'CLAUDE.md'), '# x\n');
+    await writeFile(join(source, 'a.txt'), 'a\n');
+    execFileSync('git', ['init', '-q', source]);
+    // A clone or a git worktree inside the checkout (`.claude/worktrees/<name>`, say).
+    execFileSync('git', ['init', '-q', join(source, 'nested')]);
+    await writeFile(join(source, 'nested/b.txt'), 'b\n');
+
+    const out = join(tmp, 'from-nested');
+    const { status, stderr } = run(out, '--from', source, '--no-auth');
+    assert.equal(status, 0, stderr);
+    assert.equal(read(out, 'a.txt'), 'a\n');
+    assert.ok(!existsSync(join(out, 'nested')));
+  });
+
   it('stops on a patch that does not match exactly once, and removes the output', async () => {
     const source = join(tmp, 'source');
     await mkdir(join(source, 'create/templates/auth/files'), { recursive: true });
