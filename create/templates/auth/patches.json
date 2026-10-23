@@ -50,6 +50,11 @@
     "replace": "describe('HomePage', () => {\n  // The home page is behind protectedRoutes().\n  beforeEach(() => {\n    tokenStore.set(mockToken);\n  });\n"
   },
   {
+    "file": "apps/web/e2e/home.spec.ts",
+    "find": "test('renders the home page', async ({ page }) => {\n  await page.goto('/');\n",
+    "replace": "// The home page is behind protectedRoutes(): sign in with the account the mock API accepts.\ntest('signs in and renders the home page', async ({ page }) => {\n  await page.goto('/');\n  await page.getByLabel('Email').fill('demo@example.com');\n  await page.getByLabel('Password').fill('password');\n  await page.getByRole('button', { name: 'Sign in' }).click();\n"
+  },
+  {
     "file": "README.md",
     "find": "## Check",
     "replace": "## Sign in\n\nWith `pnpm dev:mock`, sign in with `demo@example.com` / `password` (the login page shows it too);\nany other email or password is rejected. With `pnpm dev`, use an account of your real backend.\nThe mock API is `apps/web/src/features/auth/mocks.ts`.\n\n## Check"

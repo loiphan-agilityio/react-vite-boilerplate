@@ -16,7 +16,9 @@
     "lint:fix": "turbo run lint:fix",
     "test": "turbo run test",
     "build-storybook": "turbo run build-storybook",
-    "check": "turbo run lint typecheck test build build-storybook",
+    "test:e2e": "turbo run test:e2e",
+    "test:e2e:install": "pnpm --filter web test:e2e:install",
+    "check": "turbo run lint typecheck test build build-storybook test:e2e",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -58,6 +58,9 @@ export default defineConfig([
     '**/dist/',
     '**/coverage/',
     '**/storybook-static/',
+    '**/playwright-report/',
+    '**/test-results/',
+    '**/blob-report/',
     '**/public/mockServiceWorker.js',
     '**/.claude/',
   ]),
@@ -160,7 +163,7 @@ export default defineConfig([
     languageOptions: { globals: { ...globals.browser, ...globals.vitest } },
   },
   {
-    files: ['vite.config.ts', 'eslint.config.js'],
+    files: ['vite.config.ts', 'eslint.config.js', 'playwright.config.ts', 'e2e/**'],
     languageOptions: { globals: globals.node },
   },
   {
