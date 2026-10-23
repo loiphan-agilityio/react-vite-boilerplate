@@ -12,7 +12,7 @@ const repo = dirname(dirname(cli));
 const run = (...args) => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
 const read = (dir, file) => readFileSync(join(dir, file), 'utf8');
 
-describe('create-react-vite-boilerplate', () => {
+describe('create-react-vite-turbo', () => {
   let tmp;
   let auth;
   let plain;

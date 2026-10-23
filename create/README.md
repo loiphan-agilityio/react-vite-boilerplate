@@ -1,10 +1,10 @@
-# create-react-vite-boilerplate
+# create-react-vite-turbo
 
 Creates a project from this repo. It asks whether to include authentication.
 
 ```
-pnpm create react-vite-boilerplate my-app           # asks: Include authentication? (y/N)
-pnpm create react-vite-boilerplate my-app --auth    # no question (also --no-auth)
+pnpm create react-vite-turbo my-app           # asks: Include authentication? (y/N)
+pnpm create react-vite-turbo my-app --auth    # no question (also --no-auth)
 ```
 
 Then `cd my-app`, `git init`, `pnpm install`, `pnpm dev:mock`. With authentication, sign in as

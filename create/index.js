@@ -8,7 +8,7 @@ import { parseArgs } from 'node:util';
 
 const REPO = 'https://github.com/loiphan-agilityio/react-vite-boilerplate.git';
 
-const USAGE = `Usage: create-react-vite-boilerplate <dir> [--auth | --no-auth] [--from <local checkout>]`;
+const USAGE = `Usage: create-react-vite-turbo <dir> [--auth | --no-auth] [--from <local checkout>]`;
 
 const git = (...args) =>
   execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });

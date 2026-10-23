@@ -1,10 +1,15 @@
 {
-  "name": "create-react-vite-boilerplate",
+  "name": "create-react-vite-turbo",
   "version": "0.1.0",
   "description": "Create a project from the react-vite-boilerplate, with optional authentication",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loiphan-agilityio/react-vite-boilerplate.git",
+    "directory": "create"
+  },
   "bin": {
-    "create-react-vite-boilerplate": "index.js"
+    "create-react-vite-turbo": "index.js"
   },
   "files": [
     "index.js"
