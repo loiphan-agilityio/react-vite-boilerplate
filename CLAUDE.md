@@ -72,9 +72,6 @@ and `react-hook-form`, `src/lib/api/client.ts` contains `ApiClient`, and `src/te
 exists. The app's `package.json` also keeps `packageManager`: it is how the skills know it is pnpm,
 since the lockfile is at the root. `apps/web` must keep all of these.
 
-- `ci-setup` is the exception: it needs the lockfile, so run `/web-dev:ci-setup` directly from the
-  repo root (not through `develop`). Its pipeline runs `pnpm test`, which is turbo across every
-  package.
 - Never scaffold with `project-setup` (or `develop`'s new-app route) inside this repo: its template
   is a standalone app with its own lockfile, workspace file and hooks. Use "Recipe: add an app".
 

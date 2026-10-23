@@ -193,8 +193,7 @@ and concepts that the guide doesn't cover, search through the source code in
 
 Skills (the `web-dev` plugin, or its `skills/`, `references/`, `scripts/` and `agents/` copied
 into `.claude/` or `~/.claude/`). They run in this folder (`apps/web`) and refuse the monorepo
-root, except `ci-setup`, which needs the lockfile and runs from the repo root (see
-`../../CLAUDE.md`). To stay tier `template` for them, this app must keep `src/lib/api/client.ts`
+root (see `../../CLAUDE.md`). To stay tier `template` for them, this app must keep `src/lib/api/client.ts`
 (`ApiClient`), `src/test/render.tsx`, and in its `package.json` the stack dependencies (`react`,
 `vite`, `effect`, `@tanstack/react-query`, `react-hook-form`) and `packageManager`.
 
@@ -214,14 +213,12 @@ tokens in `src/styles/index.css`, use `@repo/ui/components/<x>`, `packages/ui/sr
 - `api-integration` — add or change an endpoint: schema, `ApiClient` call, query/mutation, MSW.
 - `ui-development` — a design (screenshot, mockup, Figma, DESIGN.md; asks once if none) → a UI
   that matches it: tokens, shadcn components, states, tests, visual check.
-- `ci-setup` — a GitHub Actions or GitLab CI pipeline that installs from the lockfile and runs
-  `pnpm test` on every push. Run it from the repo root.
 
 Companion skills (installed by `install-companions.sh`): `shadcn`, `react-router-data-mode`,
 `vite`, `vitest`, `vercel-react-best-practices`, `vercel-composition-patterns`,
 `react-hook-form`, `react-testing`.
 
-**Priority when they disagree:** this file and the six project skills, then
+**Priority when they disagree:** this file and the five project skills, then
 `node_modules/effect/AGENTS.md` and the installed type definitions, then companion skills.
 Companions are generic: ignore their Next.js / SSR / RSC advice, zod resolvers, Jest,
 `react-router-dom`, raw `fetch` examples and loader-first data fetching.
