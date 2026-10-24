@@ -11,6 +11,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Above setup.ts's 10s findBy* timeout, so a slow first route load fails as a missing element
+    // (with the DOM printed), not as a bare test timeout.
+    testTimeout: 20_000,
     css: false,
     coverage: {
       provider: 'v8',

@@ -5,9 +5,10 @@ import { toast } from 'sonner';
 
 import { server } from '@/mocks/server';
 
-// Feature routes are lazy, and coverage instrumentation slows their first load: the default 1s
-// for findBy* / waitFor times out now and then on a page test. A real failure still fails.
-configure({ asyncUtilTimeout: 3000 });
+// Feature routes are lazy, and coverage instrumentation slows their first load; under `pnpm check`
+// lint, typecheck, build and Storybook run alongside and slow it past 3s on a route test. A real
+// failure still fails, only later. `testTimeout` in vite.config.ts leaves room for it.
+configure({ asyncUtilTimeout: 10_000 });
 
 // jsdom has no matchMedia; sonner's Toaster (mounted by src/test/render.tsx) reads it for the
 // system theme.
