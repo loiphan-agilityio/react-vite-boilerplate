@@ -45,6 +45,7 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
 | `pnpm check` | All six gates, in two turbo runs: `lint lint:slop typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
+| `pnpm lighthouse <url>` | Lighthouse 13.5 (mobile) on a deployed or previewed page (`pnpm build`, then `pnpm --filter web preview`): accessibility under 100 or SEO under 95 fails, performance and best practices warn (`tools/lighthouse.mjs`). Reports in `lighthouse/`. CI runs it on each Netlify draft. |
 | `pnpm check:report` | The gates of `pnpm check` one after another, going on after a failure, then the output checklist: each gate pass/fail, the unit and e2e pass rates (%), line coverage and times (`tools/check-report.mjs`; `--only` / `--skip` pick gates). Markdown on stdout and in CI's run summary, JSON in `check-report.json`. |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
@@ -118,7 +119,10 @@ since the lockfile is at the root. `apps/web` must keep all of these.
 - Conventional Commits: `type(scope): summary`. The `commit-msg` hook (commitlint) rejects
   anything else.
 - The hooks live in the root `.husky/` and run from the root: `pre-commit` runs lint-staged
-  (ESLint and Prettier on the staged files), then `pnpm typecheck` (turbo, every package).
+  (ESLint, anti-slop and Prettier on the staged files), then `pnpm typecheck` (turbo, every package);
+  `pre-push` refuses a push to `main`, `master`, `dev`, `develop`, `stag`, `staging`, `prod`
+  and `production` (`PROTECTED_BRANCHES="a b"` replaces the list): those change through a
+  reviewed pull request.
   Fix what they report; never commit with `--no-verify`.
 
 ## CI/CD and deploy
@@ -131,13 +135,15 @@ since the lockfile is at the root. `apps/web` must keep all of these.
    as a draft (`pr-<number>--<site>` on a pull request), without building them again. It runs
    `netlify deploy --filter web --dir apps/web/dist` from the root (Netlify's monorepo mode), and
    `apps/web/netlify.toml` holds the redirects and headers.
-3. **e2e-deployed**: the same Playwright specs against the draft URL.
+3. **e2e-deployed**: the same Playwright specs against the draft URL, and **lighthouse**:
+   `tools/lighthouse.mjs` on it (mobile; accessibility 100 and SEO 95 or more required,
+   performance and best practices reported), its scores in the run summary.
 4. **deploy-production** (push to `main`): the same files go live, only after the deployed e2e
-   passed.
+   and Lighthouse passed.
 
 GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
 `Checks: lint, typecheck, unit, build`, `E2E: mock build`, `Deploy: Netlify draft`,
-`E2E: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
+`E2E: Netlify draft`, `Lighthouse: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
 A required status check in branch protection matches that name, so after renaming a job, select
 it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
 `Prod - Webapp Deployment`, whose Details link in the checks list opens the deploy (a job's own
@@ -165,7 +171,12 @@ new project still runs as a demo until these are done:
 - **Error reporting:** `apps/web/src/app/route-error.tsx` shows a failure to the user only; send it
   to an error tracker as well.
 - **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
-  opens the weekly update pull requests) and require the five checks above on `main`.
+  opens the weekly update pull requests) and require the checks above on `main`.
+- **Netlify toolbar:** Netlify can inject its collaboration toolbar (a script from
+  `/.netlify/scripts/hud`), seen on this boilerplate's own live site; the
+  Content-Security-Policy blocks it, and Lighthouse's Best Practices loses points for the console
+  error. Turn the toolbar off in the site's Netlify settings (its Deploy Previews section) rather
+  than loosening `script-src`.
 
 ## Package roadmap
 
@@ -184,8 +195,9 @@ Not created yet, create only when the trigger fires:
 <!-- template-only -->
 ## Project generator (`create/`)
 
-`create/` is the CLI that makes new projects from this repo, with an optional authentication overlay
-(`create/templates/auth`). See `create/README.md`. After changing any file listed in
-`create/templates/auth/patches.json`, or anything in `create/`, run `node --test create/index.test.js`
+`create/` is the CLI that makes new projects from this repo: a web app, with an optional
+authentication overlay (`create/templates/auth`), or a landing page (`create/templates/landing`).
+See `create/README.md`. After changing any file listed in a template's `patches.json` or
+`remove.json`, or anything in `create/`, run `node --test create/index.test.js`
 (the **check** job of CI runs it too). The CLI removes this block from the projects it generates.
 <!-- /template-only -->

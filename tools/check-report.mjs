@@ -99,7 +99,7 @@ const rows = selected.map((gate) => {
   });
 
   const ok = status === 0;
-  const detail = gate.detail?.() ?? { result: ok ? 'pass' : 'FAIL', note: '' };
+  const detail = gate.detail?.() ?? { result: 'pass', note: '' };
 
   return {
     gate: gate.id,

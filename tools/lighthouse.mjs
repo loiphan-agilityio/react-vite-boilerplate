@@ -36,24 +36,32 @@ const [url] = positionals;
 
 mkdirSync(values.out, { recursive: true });
 
-const { status } = spawnSync(
-  'npx',
-  [
-    '-y',
-    LIGHTHOUSE,
-    url,
-    `--only-categories=${categories.map(({ id }) => id).join(',')}`,
-    // Netlify serves every deploy but production with `X-Robots-Tag: noindex`, which fails this
-    // audit on each draft; the live site is still crawlable (public/robots.txt).
-    '--skip-audits=is-crawlable',
-    '--output=json',
-    '--output=html',
-    `--output-path=${join(values.out, 'report')}`,
-    '--chrome-flags=--headless=new --no-sandbox',
-    '--quiet',
-  ],
-  { stdio: 'inherit', shell: process.platform === 'win32' },
-);
+const args = [
+  '-y',
+  LIGHTHOUSE,
+  url,
+  `--only-categories=${categories.map(({ id }) => id).join(',')}`,
+  // A preview should not be indexed: once the drafts send `X-Robots-Tag: noindex` (they send
+  // none yet), this audit fails on each of them. The live site's robots.txt and headers are
+  // web-quality's SEO audit to check.
+  '--skip-audits=is-crawlable',
+  '--output=json',
+  '--output=html',
+  `--output-path=${join(values.out, 'report')}`,
+  '--chrome-flags=--headless=new --no-sandbox',
+  '--quiet',
+];
+
+// Windows runs npx (npx.cmd) only through a shell, which joins the arguments as they are: quote
+// each one (not npx: a quoted batch file finds no npm), so the Chrome flags stay one argument and
+// a `&` in the URL stays in the URL.
+const { status } =
+  process.platform === 'win32'
+    ? spawnSync(`npx ${args.map((arg) => `"${arg}"`).join(' ')}`, {
+        stdio: 'inherit',
+        shell: true,
+      })
+    : spawnSync('npx', args, { stdio: 'inherit' });
 
 const reportPath = join(values.out, 'report.report.json');
 
