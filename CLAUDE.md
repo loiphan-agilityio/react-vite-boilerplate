@@ -21,7 +21,8 @@ package.json            root scripts (turbo) and commitlint config; lint-staged.
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
 .github/workflows/ci.yml  CI/CD: gates, e2e, Netlify deploy of apps/web, e2e on it, production
-.husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint)
+.husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint),
+                        pre-push (refuses main, dev, stag, prod and their long names)
 .claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
                         and a hook that runs Prettier on each file Claude writes (hooks/format.mjs).
                         Claude Code reads it only in sessions started here; apps/web/.claude/
