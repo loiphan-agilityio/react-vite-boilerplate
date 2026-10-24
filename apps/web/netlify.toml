@@ -49,3 +49,10 @@
   for = "/mockServiceWorker.js"
   [headers.values]
     Cache-Control = "no-cache"
+
+# The 404 for a gone asset (the first redirect) must not be cached: a rollback to the release that
+# has the file would otherwise stay broken in that browser.
+[[headers]]
+  for = "/404.html"
+  [headers.values]
+    Cache-Control = "no-store"
