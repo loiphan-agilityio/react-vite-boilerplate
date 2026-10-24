@@ -136,6 +136,14 @@ jobs:
         with:
           name: storybook
           path: apps/web/storybook-static/
+      # A draft must stay out of search results: Netlify adds a `_headers` file's rules to
+      # netlify.toml's, and only this job's copy of the build gets one (production downloads the
+      # artifact again, without it).
+      - name: Keep the drafts out of search engines
+        run: |
+          for dir in apps/web/dist apps/web/storybook-static; do
+            if [[ -d "$dir" ]]; then printf '/*\n  X-Robots-Tag: noindex\n' >> "$dir/_headers"; fi
+          done
       - name: Deploy the app (draft)
         id: app
         env:

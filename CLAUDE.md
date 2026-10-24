@@ -134,7 +134,9 @@ since the lockfile is at the root. `apps/web` must keep all of these.
 2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to Netlify
    as a draft (`pr-<number>--<site>` on a pull request), without building them again. It runs
    `netlify deploy --filter web --dir apps/web/dist` from the root (Netlify's monorepo mode), and
-   `apps/web/netlify.toml` holds the redirects and headers.
+   `apps/web/netlify.toml` holds the redirects and headers. Each draft also sends
+   `X-Robots-Tag: noindex` (a `_headers` file the job adds to its copy), so a leaked draft URL
+   stays out of search results; production is deployed without it.
 3. **e2e-deployed**: the same Playwright specs against the draft URL, and **lighthouse**:
    `tools/lighthouse.mjs` on it (mobile; accessibility 100 and SEO 95 or more required,
    performance and best practices reported), its scores in the run summary.
