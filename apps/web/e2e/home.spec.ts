@@ -5,6 +5,19 @@ test('renders the home page', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: /solid foundation/ })).toBeVisible();
 });
 
+// The built index.html carries a Content-Security-Policy (vite.config.ts): the app must run under
+// it, with no violation logged (a blocked inline script or style, font or request).
+test('runs under its Content-Security-Policy', async ({ page }) => {
+  const violations: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().includes('Content Security Policy')) violations.push(message.text());
+  });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveCount(1);
+  expect(violations).toEqual([]);
+});
+
 // A deep link reaches the app only when the host serves index.html for every path (`vite preview`,
 // and the redirect in netlify.toml); the app then shows its own not-found page.
 test('shows the not-found page for an unknown URL', async ({ page }) => {
