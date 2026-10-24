@@ -47,6 +47,12 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Netlify serves .webmanifest as application/octet-stream (seen on a draft): name its type.
+[[headers]]
+  for = "/site.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
 # The MSW worker keeps its name across releases: always revalidate it.
 [[headers]]
   for = "/mockServiceWorker.js"
