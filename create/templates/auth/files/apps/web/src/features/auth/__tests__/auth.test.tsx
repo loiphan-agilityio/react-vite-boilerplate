@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw/http';
 
+import { UnauthorizedError } from '@/lib/api/errors';
 import { runEffect } from '@/lib/api/run';
 import { tokenStore } from '@/lib/api/token';
 import { config } from '@/lib/config';
@@ -118,7 +119,7 @@ describe('authentication', () => {
 
     // Any request will do; the session expired on the server after the page loaded.
     server.use(http.get(`${config.apiUrl}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
-    await expect(runEffect(getMe())).rejects.toMatchObject({ _tag: 'UnauthorizedError' });
+    await expect(runEffect(getMe())).rejects.toBeInstanceOf(UnauthorizedError);
 
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');

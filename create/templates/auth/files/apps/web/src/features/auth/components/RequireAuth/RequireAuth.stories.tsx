@@ -10,11 +10,13 @@ const meta = {
   // Signed in; the stories below change only what `/auth/me` answers.
   beforeEach: () => {
     tokenStore.set(mockToken);
+
     return () => {
       tokenStore.clear();
     };
   },
 } satisfies Meta<typeof RequireAuth>;
+
 export default meta;
 
 type Story = StoryObj<typeof meta>;

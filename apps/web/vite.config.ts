@@ -31,6 +31,7 @@ const contentSecurityPolicy = [
  */
 const cspMetaTag = (): Plugin => {
   let appIndexHtml = '';
+
   return {
     name: 'csp-meta-tag',
     apply: 'build',
@@ -61,6 +62,7 @@ const mockWorkerOnlyWhenMocking = (): Plugin => {
   let worker = '';
   let mocking = false;
   let appBuild = false;
+
   return {
     name: 'mock-worker-only-when-mocking',
     apply: 'build',
@@ -71,6 +73,7 @@ const mockWorkerOnlyWhenMocking = (): Plugin => {
     },
     transformIndexHtml: (html, { filename }) => {
       if (resolve(filename) === appIndexHtml) appBuild = true;
+
       return html;
     },
     closeBundle: async () => {

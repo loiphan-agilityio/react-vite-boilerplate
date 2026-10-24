@@ -13,6 +13,7 @@ import { Input } from '@repo/ui/components/input';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { UnauthorizedError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { setFormErrors } from '@/lib/forms';
 
@@ -26,6 +27,7 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const signIn = useSignIn();
+
   const {
     control,
     handleSubmit,
@@ -40,7 +42,7 @@ export const LoginPage = () => {
         void navigate(safeRedirect(searchParams.get('redirect')), { replace: true });
       },
       onError: (error) => {
-        if (error._tag === 'UnauthorizedError') {
+        if (error instanceof UnauthorizedError) {
           setError('root.server', { type: 'server', message: 'Wrong email or password.' });
         } else {
           setFormErrors(setError, error, getValues());

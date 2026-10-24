@@ -16,6 +16,7 @@ export const mockToken = 'mock-token';
 export const createAuthHandlers = () => [
   http.post<never, Credentials>(loginUrl, async ({ request }) => {
     const { email, password } = await request.json();
+
     return email === mockUser.email && password === mockPassword
       ? HttpResponse.json({ token: mockToken, user: mockUser })
       : HttpResponse.json({}, { status: 401 });

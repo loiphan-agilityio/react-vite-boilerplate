@@ -8,6 +8,7 @@ import { createQueryClient } from '@/lib/query-client';
 export const AppProviders = ({ children }: { readonly children: ReactNode }) => {
   // One client per mounted app (useState keeps it stable across re-renders).
   const [queryClient] = useState(createQueryClient);
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}

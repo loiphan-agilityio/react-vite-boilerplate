@@ -8,6 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
 // An empty value (`E2E_BASE_URL=`, an empty CI output) counts as unset, as in `webServer` below.
 const deployedUrl = process.env.E2E_BASE_URL === '' ? undefined : process.env.E2E_BASE_URL;
 const isCI = Boolean(process.env.CI);
+
 // GitHub Actions turns the github reporter's lines into annotations; elsewhere they are noise.
 const onGitHub = Boolean(process.env.GITHUB_ACTIONS);
 const port = 4173;

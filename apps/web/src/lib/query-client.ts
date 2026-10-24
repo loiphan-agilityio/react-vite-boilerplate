@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 
-import type { ApiError } from '@/lib/api/errors';
+import { type ApiError, NetworkError, ServerError } from '@/lib/api/errors';
 
 declare module '@tanstack/react-query' {
   interface Register {
@@ -11,7 +11,7 @@ declare module '@tanstack/react-query' {
 
 /** Only failures that can succeed on a second try are retried; 4xx answers will not change. */
 const isTransient = (error: ApiError) =>
-  error._tag === 'NetworkError' || (error._tag === 'ServerError' && error.status >= 500);
+  error instanceof NetworkError || (error instanceof ServerError && error.status >= 500);
 
 export const createQueryClient = () =>
   new QueryClient({

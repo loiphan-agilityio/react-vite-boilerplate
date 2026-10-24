@@ -17,7 +17,10 @@ const preview: Preview = {
   async beforeEach({ parameters }) {
     workerStarted ??= worker.start({ onUnhandledFrame: 'bypass', quiet: true });
     await workerStarted;
+    // SAFETY: Storybook types parameters loosely; stories in this app set only `msw.handlers`
+    // (MswParameters), and a story without it falls back to no extra handlers.
     worker.use(...((parameters as MswParameters).msw?.handlers ?? []));
+
     return () => {
       worker.resetHandlers();
     };

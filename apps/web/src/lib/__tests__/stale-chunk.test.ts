@@ -9,11 +9,13 @@ describe('reloadOnStaleChunk', () => {
     let time = start;
     const reload = vi.fn();
     const handler = reloadOnStaleChunk({ reload, now: () => time });
+
     return {
       reload,
       fire: () => {
         const event = new Event('vite:preloadError', { cancelable: true });
         handler(event);
+
         return event;
       },
       advance: (ms: number) => {

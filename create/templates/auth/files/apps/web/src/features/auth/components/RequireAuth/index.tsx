@@ -27,6 +27,7 @@ export const RequireAuth = () => {
     if (previousToken.current !== null && token !== null && token !== previousToken.current) {
       void queryClient.resetQueries();
     }
+
     previousToken.current = token;
   }, [token, queryClient]);
 

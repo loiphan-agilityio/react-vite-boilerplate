@@ -1,6 +1,7 @@
 const KEY = 'auth-token';
 
 const listeners = new Set<() => void>();
+
 const notify = () => {
   for (const listener of listeners) listener();
 };
@@ -30,11 +31,14 @@ export const tokenStore = {
   },
   subscribe: (listener: () => void) => {
     listeners.add(listener);
+
     // Another tab signing in or out changes the same key; `key` is null when storage is cleared.
     const onStorage = (event: StorageEvent) => {
       if (event.key === KEY || event.key === null) listener();
     };
+
     window.addEventListener('storage', onStorage);
+
     return () => {
       listeners.delete(listener);
       window.removeEventListener('storage', onStorage);

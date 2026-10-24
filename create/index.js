@@ -22,6 +22,7 @@ const askAuth = async () => {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const answer = await rl.question('Include authentication? (y/N) ');
   rl.close();
+
   return /^y(es)?$/i.test(answer.trim());
 };
 
@@ -36,6 +37,7 @@ const copyFiles = async (from, dest, files, mode = 0) => {
 /** The working tree of a local checkout, uncommitted files included (used by the tests). */
 const copyWorkingTree = (from, dest) => {
   const files = git('-C', from, 'ls-files', '-z', '-co', '--exclude-standard').split('\0');
+
   return copyFiles(
     from,
     dest,
@@ -50,9 +52,11 @@ const copyWorkingTree = (from, dest) => {
 /** The overlay never overwrites a file of the base. */
 const copyOverlay = async (from, dest) => {
   const entries = await readdir(from, { recursive: true, withFileTypes: true });
+
   const files = entries
     .filter((e) => e.isFile())
     .map((e) => relative(from, join(e.parentPath, e.name)));
+
   await copyFiles(from, dest, files, constants.COPYFILE_EXCL);
 };
 
@@ -62,11 +66,13 @@ const applyPatches = async (dest, patches) => {
     const path = join(dest, file);
     const text = await readFile(path, 'utf8');
     const count = text.split(find).length - 1;
+
     if (count !== 1) {
       throw new Error(
         `Patch for ${file}: expected 1 match for ${JSON.stringify(find)}, found ${count}.`,
       );
     }
+
     await writeFile(
       path,
       text.replace(find, () => replace),
@@ -89,8 +95,10 @@ const nameProject = async (dest, name) => {
     ['CLAUDE.md', /^# boilerplate \(monorepo\)$/m, `# ${name} (monorepo)`],
     ['apps/web/index.html', /<title>Boilerplate<\/title>/, `<title>${name}</title>`],
   ];
+
   for (const [file, find, replace] of renames) {
     const path = join(dest, file);
+
     if (!existsSync(path)) continue;
     await writeFile(path, (await readFile(path, 'utf8')).replace(find, replace));
   }
@@ -102,9 +110,11 @@ const main = async () => {
     allowNegative: true,
     options: { auth: { type: 'boolean' }, from: { type: 'string' }, name: { type: 'string' } },
   });
+
   if (positionals.length !== 1) throw new Error(USAGE);
 
   const dest = resolve(positionals[0]);
+
   if (existsSync(dest)) throw new Error(`${dest} already exists.`);
   // A caller that generates into a temporary folder (web-dev's create-project.sh) passes --name.
   const name = toPackageName(values.name ?? basename(dest));
@@ -137,6 +147,7 @@ const main = async () => {
 
   console.log(`\nCreated ${positionals[0]}${withAuth ? ' with authentication' : ''}. Next:\n`);
   console.log(`  cd ${positionals[0]}\n  git init\n  pnpm install\n  pnpm dev:mock`);
+
   if (withAuth) console.log(`\nThen sign in with the demo account: ${DEMO_ACCOUNT}`);
 };
 

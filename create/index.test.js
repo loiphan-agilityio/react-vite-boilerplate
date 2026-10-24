@@ -23,12 +23,14 @@ describe('create-react-vite-turbo', () => {
     tmp = await mkdtemp(join(tmpdir(), 'rvb-'));
     auth = join(tmp, 'auth');
     plain = join(tmp, 'plain');
+
     for (const [dir, flag] of [
       [auth, '--auth'],
       [plain, '--no-auth'],
     ]) {
       const { status, stderr, stdout } = run(dir, '--from', repo, flag);
       assert.equal(status, 0, stderr);
+
       if (dir === auth) authOutput = stdout;
       else plainOutput = stdout;
     }
@@ -76,6 +78,7 @@ describe('create-react-vite-turbo', () => {
     const mocks = read(auth, 'apps/web/src/features/auth/mocks.ts');
     const email = /email: '([^']+)'/.exec(mocks)[1];
     const password = /mockPassword = '([^']+)'/.exec(mocks)[1];
+
     for (const text of [
       authOutput,
       read(auth, 'apps/web/src/features/auth/components/LoginPage/index.tsx'),
@@ -84,6 +87,7 @@ describe('create-react-vite-turbo', () => {
     ]) {
       assert.ok(text.includes(email) && text.includes(password));
     }
+
     assert.ok(!plainOutput.includes(email) && !read(plain, 'README.md').includes(email));
   });
 

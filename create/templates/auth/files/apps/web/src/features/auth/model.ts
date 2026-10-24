@@ -9,9 +9,11 @@
  */
 export const safeRedirect = (value: string | null) => {
   if (!value?.startsWith('/')) return '/';
+
   try {
     const { origin, pathname, search, hash } = new URL(value, window.location.origin);
     const path = `${pathname}${search}${hash}`;
+
     return origin === window.location.origin && !path.startsWith('//') ? path : '/';
   } catch {
     return '/';

@@ -37,6 +37,7 @@ test.describe('when the browser blocks service workers', () => {
     });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
     // Only the local run is always the mock build (playwright.config.ts); a deploy built with
     // `pnpm build` once the app has a backend starts no MSW, so it logs no warning.
     if (!process.env.E2E_BASE_URL) {

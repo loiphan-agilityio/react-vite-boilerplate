@@ -12,9 +12,16 @@ const Env = Schema.Struct({
   VITE_API_MOCKING: Schema.optional(Schema.Literals(['true', 'false'])),
 });
 
+/** The variables as Vite exposes them: strings, or undefined when unset. */
+interface RawEnv {
+  readonly VITE_API_URL?: string | undefined;
+  readonly VITE_API_MOCKING?: string | undefined;
+}
+
 /** Throws a SchemaError naming the bad variable, so a misconfigured app fails at startup. */
-export const parseConfig = (raw: unknown) => {
+export const parseConfig = (raw: RawEnv) => {
   const { VITE_API_URL, VITE_API_MOCKING } = Schema.decodeUnknownSync(Env)(raw);
+
   return {
     // An empty value (`VITE_API_URL=` in .env.local, an unset CI variable) counts as unset: '' would
     // send every request to the page's own host, which answers with index.html.
