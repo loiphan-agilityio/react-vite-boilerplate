@@ -3,7 +3,7 @@ import type { ClientOnErrorFunction } from 'react-router';
 /** Where an error that reached `reportError` came from. */
 export interface ErrorContext {
   readonly source: 'route' | 'query' | 'mutation';
-  /** The route pattern (`/todos/:id`) or the query key, as text. */
+  /** The route pattern (`/items/:id`) or the query key, as text. */
   readonly where?: string;
 }
 

@@ -31,7 +31,7 @@ describe('createQueryClient error reporting', () => {
     const queryClient = createQueryClient();
 
     await queryClient
-      .query({ queryKey: ['todos'], queryFn: () => Promise.reject(error), retry: false })
+      .query({ queryKey: ['items'], queryFn: () => Promise.reject(error), retry: false })
       .catch(() => undefined);
     await queryClient
       .getMutationCache()
@@ -47,9 +47,9 @@ describe('createQueryClient error reporting', () => {
     await fail(new InvalidResponseError({ message: 'Expected string' }));
 
     expect(consoleError.mock.calls.map(([label]) => String(label))).toEqual([
-      '[query ["todos"]]',
+      '[query ["items"]]',
       '[mutation]',
-      '[query ["todos"]]',
+      '[query ["items"]]',
       '[mutation]',
     ]);
   });

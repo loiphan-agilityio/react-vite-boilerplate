@@ -175,7 +175,11 @@ new project still runs as a demo until these are done:
   its schema) goes through `reportError` in `apps/web/src/lib/report-error.ts`, which writes to the
   console; call the error tracker there and the whole app reports to it.
 - **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
-  opens the weekly update pull requests) and require the checks above on `main`.
+  opens the weekly update pull requests), and protect `main` with `.github/rulesets/main.json`: no
+  deletion or force push, changes through a squash-merged pull request, and the five checks above
+  (a skipped deploy job, as on a Dependabot pull request, counts as passed). A repository admin
+  applies it once: `gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/main.json`
+  (or Settings > Rules > Rulesets > Import). After renaming a job, update its name there.
 - **Netlify toolbar:** Netlify can inject its collaboration toolbar (a script from
   `/.netlify/scripts/hud`), seen on this boilerplate's own live site; the
   Content-Security-Policy blocks it, and Lighthouse's Best Practices loses points for the console
