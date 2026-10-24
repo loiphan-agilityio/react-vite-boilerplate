@@ -16,4 +16,5 @@ pnpm dev        # needs a real backend at VITE_API_URL (copy apps/web/.env.examp
 
 `pnpm check` runs lint, typecheck, tests, build, the Storybook build and the Playwright end-to-end
 tests (`pnpm test:e2e:install` downloads Chromium once per machine). Run it before committing.
-CI/CD (`.github/workflows/ci.yml`, deployed to Netlify) is described in [CLAUDE.md](CLAUDE.md).
+CI/CD (`.github/workflows/ci.yml`, deployed to Netlify) is described in [CLAUDE.md](CLAUDE.md),
+with what to change before real users (a backend instead of the mocks, among others).

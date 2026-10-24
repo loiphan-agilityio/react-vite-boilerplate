@@ -145,6 +145,23 @@ backend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/
 there as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to
 `build` in `apps/web/netlify.toml`.
 
+### Before real users
+
+What ships is production-shaped (security headers and a Content-Security-Policy, hashed assets
+cached for a year, a stale tab reloaded once after a deploy, no mock code in a `pnpm build`), but a
+new project still runs as a demo until these are done:
+
+- **Backend:** the paragraph above (`VITE_API_URL`, `build` instead of `build:mock`).
+- **Content-Security-Policy:** in `apps/web/vite.config.ts`, narrow `connect-src` from `https:` to
+  the API's origin.
+- **Token storage** (with authentication): `apps/web/src/lib/api/token.ts` keeps the bearer token
+  in localStorage, which any script on the page can read; move it to an httpOnly cookie once the
+  backend supports one. There is no refresh token: a 401 ends the session.
+- **Error reporting:** `apps/web/src/app/route-error.tsx` shows a failure to the user only; send it
+  to an error tracker as well.
+- **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
+  opens the weekly update pull requests) and require the five checks above on `main`.
+
 ## Package roadmap
 
 Not created yet, create only when the trigger fires:
