@@ -170,8 +170,9 @@ new project still runs as a demo until these are done:
 - **Token storage** (with authentication): `apps/web/src/lib/api/token.ts` keeps the bearer token
   in localStorage, which any script on the page can read; move it to an httpOnly cookie once the
   backend supports one. There is no refresh token: a 401 ends the session.
-- **Error reporting:** `apps/web/src/app/route-error.tsx` shows a failure to the user only; send it
-  to an error tracker as well.
+- **Error reporting:** every unexpected error (a route that throws, a 5xx, a response that breaks
+  its schema) goes through `reportError` in `apps/web/src/lib/report-error.ts`, which writes to the
+  console; call the error tracker there and the whole app reports to it.
 - **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
   opens the weekly update pull requests) and require the checks above on `main`.
 - **Netlify toolbar:** Netlify can inject its collaboration toolbar (a script from

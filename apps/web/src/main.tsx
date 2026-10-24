@@ -8,6 +8,7 @@ import { RouterProvider } from 'react-router/dom';
 import { AppProviders } from '@/app/providers';
 import { createRoutes } from '@/app/routes';
 import { config } from '@/lib/config';
+import { reportRouteError } from '@/lib/report-error';
 import { reloadOnStaleChunk } from '@/lib/stale-chunk';
 
 // A lazy route whose chunk is gone after a deploy reloads the tab once (see stale-chunk.ts).
@@ -34,7 +35,7 @@ if (!root) throw new Error('Missing #root element in index.html');
 createRoot(root).render(
   <StrictMode>
     <AppProviders>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} onError={reportRouteError} />
     </AppProviders>
   </StrictMode>,
 );
