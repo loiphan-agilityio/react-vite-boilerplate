@@ -32,3 +32,9 @@ auditConfig:
     # nothing of it ships to the browser. No patched release exists yet (3.0.3 is the latest).
     # Drop this entry once one does.
     - GHSA-vfj7-8cjw-p6xm
+# Patched transitive versions, until the packages that pull them in require them. Drop an entry
+# once `pnpm why <name>` shows the patched version without it.
+overrides:
+  # fast-uri <3.1.9: URI scheme spoofing and host confusion (GHSA-333x-w4r6-6crp and related),
+  # through @hookform/resolvers > ajv; `pnpm update --depth Infinity` kept 3.1.8.
+  fast-uri: ^3.1.9

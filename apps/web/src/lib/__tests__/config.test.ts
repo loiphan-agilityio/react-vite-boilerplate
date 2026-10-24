@@ -5,6 +5,10 @@ describe('parseConfig', () => {
     expect(parseConfig({})).toEqual({ apiUrl: '/api', apiMocking: false });
   });
 
+  it('treats an empty VITE_API_URL as unset', () => {
+    expect(parseConfig({ VITE_API_URL: '' }).apiUrl).toBe('/api');
+  });
+
   it('reads the values that are set', () => {
     expect(parseConfig({ VITE_API_URL: 'https://api.test', VITE_API_MOCKING: 'true' })).toEqual({
       apiUrl: 'https://api.test',

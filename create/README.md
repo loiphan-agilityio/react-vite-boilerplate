@@ -15,6 +15,10 @@ Then `cd my-app`, `git init`, `pnpm install`, `pnpm dev:mock`. With authenticati
   sign out, `protectedRoutes()` for routes that need a signed-in user, `/auth/me`), with MSW mocks.
   No sign-up and no refresh token.
 
+The project is named after its folder (`my-app`: the root `package.json`, the README and
+`CLAUDE.md` headings, the page title); `--name <name>` names it otherwise, for a caller that
+generates into a temporary folder.
+
 `--from <dir>` copies the working tree of a local checkout (uncommitted files included) instead of
 cloning; the tests use it. The CLI clones `https://github.com/loiphan-agilityio/react-vite-boilerplate.git`,
 so a private repo needs git access.
@@ -28,7 +32,8 @@ so a private repo needs git access.
    exactly once**, or the CLI stops, names the file and the text, and deletes the output folder. So
    when the base changes under a patch, the next run fails loudly instead of silently overwriting
    the change.
-4. `create/` and the `<!-- template-only -->` block of the root `CLAUDE.md` are removed.
+4. `create/` and the `<!-- template-only -->` block of the root `CLAUDE.md` are removed, and
+   `boilerplate` gives way to the project's name.
 
 ## Maintaining it
 

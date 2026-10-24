@@ -1,6 +1,8 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw/http';
 
 import { tokenStore } from '@/lib/api/token';
+import { config } from '@/lib/config';
 import { server } from '@/mocks/server';
 import { renderWithProviders } from '@/test/render';
 
@@ -35,5 +37,33 @@ describe('RequireAuth', () => {
     server.resetHandlers();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+  });
+
+  it('lets the user sign out from the error state', async () => {
+    server.use(authMocks.meError);
+    const { user, router } = renderWithProviders(<RequireAuth />);
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }));
+    expect(tokenStore.get()).toBeNull();
+    expect(router.state.location.pathname).toBe('/login');
+  });
+
+  it('starts over when another tab signs in as someone else', async () => {
+    const otherUser = { ...mockUser, id: '2', name: 'Other User' };
+    // Answers the other tab's token; the default handler answers mockToken.
+    server.use(
+      http.get(`${config.apiUrl}/auth/me`, ({ request }) =>
+        request.headers.get('Authorization') === 'Bearer other-token'
+          ? HttpResponse.json(otherUser)
+          : undefined,
+      ),
+    );
+    renderWithProviders(<RequireAuth />);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+
+    act(() => {
+      localStorage.setItem('auth-token', 'other-token');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'auth-token' }));
+    });
+    expect(await screen.findByText(otherUser.name)).toBeInTheDocument();
   });
 });

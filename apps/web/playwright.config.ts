@@ -30,7 +30,9 @@ export default defineConfig({
     : {
         command: `pnpm build:mock --outDir dist-e2e && pnpm preview --outDir dist-e2e --port ${port} --strictPort`,
         url: `http://localhost:${port}`,
-        reuseExistingServer: !isCI,
+        // Never test a server that is already running on the port (a `pnpm preview` of a production
+        // build, another project's e2e run): a busy port fails with Playwright's "already used".
+        reuseExistingServer: false,
         timeout: 120_000,
       },
 });

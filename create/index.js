@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { constants, existsSync } from 'node:fs';
+import { constants, existsSync, statSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 
@@ -11,7 +11,7 @@ const REPO = 'https://github.com/loiphan-agilityio/react-vite-boilerplate.git';
 /** What the mock API of the auth overlay accepts (features/auth/mocks.ts); index.test.js keeps them equal. */
 const DEMO_ACCOUNT = 'demo@example.com / password';
 
-const USAGE = `Usage: create-react-vite-turbo <dir> [--auth | --no-auth] [--from <local checkout>]`;
+const USAGE = `Usage: create-react-vite-turbo <dir> [--auth | --no-auth] [--name <name>] [--from <local checkout>]`;
 
 const git = (...args) =>
   execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
@@ -39,8 +39,11 @@ const copyWorkingTree = (from, dest) => {
   return copyFiles(
     from,
     dest,
-    // An untracked nested repository (a clone, a git worktree) is listed as `dir/`: skip it.
-    files.filter((file) => file && !file.endsWith('/') && existsSync(join(from, file))),
+    // Files only: an untracked nested repository (a clone, a git worktree) is listed as `dir/`, a
+    // tracked one (a gitlink, a submodule) as `dir`, and a deleted file is listed but missing.
+    files.filter(
+      (file) => file && statSync(join(from, file), { throwIfNoEntry: false })?.isFile() === true,
+    ),
   );
 };
 
@@ -71,16 +74,40 @@ const applyPatches = async (dest, patches) => {
   }
 };
 
+/** A valid npm package name from a folder name or `--name`: `My Shop!` becomes `my-shop`. */
+const toPackageName = (name) =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^[._-]+|-+$/g, '') || 'app';
+
+/** Names the project after itself instead of `boilerplate`; a file the tree lacks is skipped. */
+const nameProject = async (dest, name) => {
+  const renames = [
+    ['package.json', /^ {2}"name": "boilerplate",$/m, `  "name": "${name}",`],
+    ['README.md', /^# boilerplate$/m, `# ${name}`],
+    ['CLAUDE.md', /^# boilerplate \(monorepo\)$/m, `# ${name} (monorepo)`],
+    ['apps/web/index.html', /<title>Boilerplate<\/title>/, `<title>${name}</title>`],
+  ];
+  for (const [file, find, replace] of renames) {
+    const path = join(dest, file);
+    if (!existsSync(path)) continue;
+    await writeFile(path, (await readFile(path, 'utf8')).replace(find, replace));
+  }
+};
+
 const main = async () => {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
     allowNegative: true,
-    options: { auth: { type: 'boolean' }, from: { type: 'string' } },
+    options: { auth: { type: 'boolean' }, from: { type: 'string' }, name: { type: 'string' } },
   });
   if (positionals.length !== 1) throw new Error(USAGE);
 
   const dest = resolve(positionals[0]);
   if (existsSync(dest)) throw new Error(`${dest} already exists.`);
+  // A caller that generates into a temporary folder (web-dev's create-project.sh) passes --name.
+  const name = toPackageName(values.name ?? basename(dest));
   const withAuth = values.auth ?? (await askAuth());
 
   try {
@@ -102,6 +129,7 @@ const main = async () => {
     const text = await readFile(claude, 'utf8');
     const stripped = text.replace(/<!-- template-only -->[\s\S]*?<!-- \/template-only -->\n*/g, '');
     await writeFile(claude, `${stripped.trimEnd()}\n`);
+    await nameProject(dest, name);
   } catch (error) {
     await rm(dest, { recursive: true, force: true });
     throw error;

@@ -42,6 +42,21 @@ describe('create-react-vite-turbo', () => {
     }
   });
 
+  it('names the project after its folder', () => {
+    assert.equal(JSON.parse(read(plain, 'package.json')).name, 'plain');
+    assert.ok(read(plain, 'README.md').startsWith('# plain\n'));
+    assert.ok(read(plain, 'CLAUDE.md').startsWith('# plain (monorepo)\n'));
+    assert.ok(read(plain, 'apps/web/index.html').includes('<title>plain</title>'));
+  });
+
+  it('takes --name instead, as a valid package name', () => {
+    const out = join(tmp, 'tmp.Xy12');
+    const { status, stderr } = run(out, '--from', repo, '--no-auth', '--name', 'My Shop!');
+    assert.equal(status, 0, stderr);
+    assert.equal(JSON.parse(read(out, 'package.json')).name, 'my-shop');
+    assert.ok(read(out, 'README.md').startsWith('# my-shop\n'));
+  });
+
   it('without auth, gives the base project', () => {
     assert.ok(read(plain, 'apps/web/src/lib/runtime.ts').includes('AuthToken.none'));
     assert.ok(!existsSync(join(plain, 'apps/web/src/features/auth')));
@@ -92,6 +107,27 @@ describe('create-react-vite-turbo', () => {
     const { status, stderr } = run(out, '--from', source, '--no-auth');
     assert.equal(status, 0, stderr);
     assert.equal(read(out, 'a.txt'), 'a\n');
+    assert.ok(!existsSync(join(out, 'nested')));
+  });
+
+  it('copies a working tree that tracks a nested repository (a gitlink, a submodule)', async () => {
+    const source = join(tmp, 'with-gitlink');
+    const nested = join(source, 'nested');
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(source, 'CLAUDE.md'), '# x\n');
+    execFileSync('git', ['init', '-q', source]);
+    execFileSync('git', ['init', '-q', nested]);
+    await writeFile(join(nested, 'b.txt'), 'b\n');
+    const commit = ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'b'];
+    execFileSync('git', ['-C', nested, 'add', 'b.txt']);
+    execFileSync('git', ['-C', nested, ...commit]);
+    // `git add` of a folder that is a repository records a gitlink: ls-files lists `nested`.
+    execFileSync('git', ['-C', source, 'add', 'CLAUDE.md', 'nested']);
+
+    const out = join(tmp, 'from-gitlink');
+    const { status, stderr } = run(out, '--from', source, '--no-auth');
+    assert.equal(status, 0, stderr);
+    assert.equal(read(out, 'CLAUDE.md'), '# x\n');
     assert.ok(!existsSync(join(out, 'nested')));
   });
 
