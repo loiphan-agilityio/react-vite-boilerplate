@@ -57,6 +57,9 @@ jobs:
       # runs every gate even after one fails and writes the checklist (pass rates, coverage) to the
       # run's summary page.
       - run: pnpm check:report --skip e2e
+      # What check:report and the lighthouse job conclude from their tools' output.
+      - name: Test the repo's tools
+        run: pnpm test:tools
       # The generator exists only in the boilerplate: a project created from it has no create/.
       - name: Test the project generator
         if: ${{ hashFiles('create/index.test.js') != '' }}

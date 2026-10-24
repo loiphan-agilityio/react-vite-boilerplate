@@ -1,4 +1,10 @@
-import { NotFoundError, ServerError } from '@/lib/api/errors';
+import {
+  type ApiError,
+  InvalidResponseError,
+  NetworkError,
+  NotFoundError,
+  ServerError,
+} from '@/lib/api/errors';
 
 import { createQueryClient } from '../query-client';
 
@@ -17,5 +23,44 @@ describe('createQueryClient', () => {
     // A 4xx without its own ApiError case (409, 429) arrives as a ServerError.
     expect(retry(0, new ServerError({ status: 409 }))).toBe(false);
     expect(mutations?.retry).toBe(0);
+  });
+});
+
+describe('createQueryClient error reporting', () => {
+  const fail = async (error: ApiError) => {
+    const queryClient = createQueryClient();
+
+    await queryClient
+      .query({ queryKey: ['todos'], queryFn: () => Promise.reject(error), retry: false })
+      .catch(() => undefined);
+    await queryClient
+      .getMutationCache()
+      .build(queryClient, { mutationFn: () => Promise.reject(error) })
+      .execute(undefined)
+      .catch(() => undefined);
+  };
+
+  it('reports a 5xx and a body that breaks its schema, from queries and mutations', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await fail(new ServerError({ status: 500 }));
+    await fail(new InvalidResponseError({ message: 'Expected string' }));
+
+    expect(consoleError.mock.calls.map(([label]) => String(label))).toEqual([
+      '[query ["todos"]]',
+      '[mutation]',
+      '[query ["todos"]]',
+      '[mutation]',
+    ]);
+  });
+
+  it('does not report what the screen explains: a 4xx or a lost connection', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await fail(new NotFoundError());
+    await fail(new ServerError({ status: 409 }));
+    await fail(new NetworkError());
+
+    expect(consoleError).not.toHaveBeenCalled();
   });
 });

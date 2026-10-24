@@ -46,6 +46,7 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
 | `pnpm check` | All six gates, in two turbo runs: `lint lint:slop typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
 | `pnpm lighthouse <url>` | Lighthouse 13.5 (mobile) on a deployed or previewed page (`pnpm build`, then `pnpm --filter web preview`): accessibility under 100 or SEO under 95 fails, performance and best practices warn (`tools/lighthouse.mjs`). Reports in `lighthouse/`. CI runs it on each Netlify draft. |
+| `pnpm test:tools` | The tests of `tools/lib/` (what `check:report` and `lighthouse` conclude from their tools' output), Node's test runner. CI's check job runs them. |
 | `pnpm check:report` | The gates of `pnpm check` one after another, going on after a failure, then the output checklist: each gate pass/fail, the unit and e2e pass rates (%), line coverage and times (`tools/check-report.mjs`; `--only` / `--skip` pick gates). Markdown on stdout and in CI's run summary, JSON in `check-report.json`. |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
@@ -170,8 +171,9 @@ new project still runs as a demo until these are done:
 - **Token storage** (with authentication): `apps/web/src/lib/api/token.ts` keeps the bearer token
   in localStorage, which any script on the page can read; move it to an httpOnly cookie once the
   backend supports one. There is no refresh token: a 401 ends the session.
-- **Error reporting:** `apps/web/src/app/route-error.tsx` shows a failure to the user only; send it
-  to an error tracker as well.
+- **Error reporting:** every unexpected error (a route that throws, a 5xx, a response that breaks
+  its schema) goes through `reportError` in `apps/web/src/lib/report-error.ts`, which writes to the
+  console; call the error tracker there and the whole app reports to it.
 - **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
   opens the weekly update pull requests) and require the checks above on `main`.
 - **Netlify toolbar:** Netlify can inject its collaboration toolbar (a script from
