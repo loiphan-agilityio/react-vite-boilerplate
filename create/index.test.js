@@ -42,6 +42,21 @@ describe('create-react-vite-turbo', () => {
     }
   });
 
+  it('names the project after its folder', () => {
+    assert.equal(JSON.parse(read(plain, 'package.json')).name, 'plain');
+    assert.ok(read(plain, 'README.md').startsWith('# plain\n'));
+    assert.ok(read(plain, 'CLAUDE.md').startsWith('# plain (monorepo)\n'));
+    assert.ok(read(plain, 'apps/web/index.html').includes('<title>plain</title>'));
+  });
+
+  it('takes --name instead, as a valid package name', () => {
+    const out = join(tmp, 'tmp.Xy12');
+    const { status, stderr } = run(out, '--from', repo, '--no-auth', '--name', 'My Shop!');
+    assert.equal(status, 0, stderr);
+    assert.equal(JSON.parse(read(out, 'package.json')).name, 'my-shop');
+    assert.ok(read(out, 'README.md').startsWith('# my-shop\n'));
+  });
+
   it('without auth, gives the base project', () => {
     assert.ok(read(plain, 'apps/web/src/lib/runtime.ts').includes('AuthToken.none'));
     assert.ok(!existsSync(join(plain, 'apps/web/src/features/auth')));
