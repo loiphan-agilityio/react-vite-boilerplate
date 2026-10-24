@@ -88,7 +88,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web exec playwright install --with-deps chromium
-      # Builds on mocks into dist-e2e/ and serves it with `vite preview` (apps/web/playwright.config.ts).
+      # Builds on mocks into dist-e2e/ and serves it with `vite preview`
+      # (apps/web/playwright.config.ts).
       - run: pnpm test:e2e
       # The deploy jobs publish the build these tests passed on. Once the app has a backend, upload
       # apps/web/dist/ from check's `pnpm build` (with VITE_API_URL) as `app` instead.
