@@ -94,6 +94,8 @@ const nameProject = async (dest, name) => {
     ['README.md', /^# boilerplate$/m, `# ${name}`],
     ['CLAUDE.md', /^# boilerplate \(monorepo\)$/m, `# ${name} (monorepo)`],
     ['apps/web/index.html', /<title>Boilerplate<\/title>/, `<title>${name}</title>`],
+    ['apps/web/public/site.webmanifest', /"name": "Boilerplate"/, `"name": "${name}"`],
+    ['apps/web/public/site.webmanifest', /"short_name": "Boilerplate"/, `"short_name": "${name}"`],
   ];
 
   for (const [file, find, replace] of renames) {

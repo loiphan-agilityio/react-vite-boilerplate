@@ -49,6 +49,7 @@ describe('create-react-vite-turbo', () => {
     assert.ok(read(plain, 'README.md').startsWith('# plain\n'));
     assert.ok(read(plain, 'CLAUDE.md').startsWith('# plain (monorepo)\n'));
     assert.ok(read(plain, 'apps/web/index.html').includes('<title>plain</title>'));
+    assert.equal(JSON.parse(read(plain, 'apps/web/public/site.webmanifest')).short_name, 'plain');
   });
 
   it('takes --name instead, as a valid package name', () => {
