@@ -40,13 +40,15 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm lint` | ESLint, `prettier --check` and anti-slop (Oxlint, `oxlint.config.ts`). `pnpm lint:fix` fixes and formats (uncached). |
 | `pnpm typecheck` | Type-check. |
 | `pnpm test` | Vitest, with coverage. |
+| `pnpm test:watch` | Vitest in watch mode: re-runs the tests a saved file affects, until stopped. Keep it running in a terminal of its own while writing code. |
 | `pnpm build` | Production build (apps only; packages have no build). |
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
 | `pnpm check` | All six gates, in two turbo runs: `lint lint:slop typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
+| `pnpm check:report` | The gates of `pnpm check` one after another, going on after a failure, then the output checklist: each gate pass/fail, the unit and e2e pass rates (%), line coverage and times (`tools/check-report.mjs`; `--only` / `--skip` pick gates). Markdown on stdout and in CI's run summary, JSON in `check-report.json`. |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
-  script from inside the package (`cd apps/web`, then `pnpm test:watch`).
+  script from inside the package (`cd apps/web`, then `pnpm storybook`).
 - Run each command on its own, exactly as written (no pipes or redirects): the tool result
   already holds the output and the exit code.
 - Tasks run in parallel. A `transit` task (no script) makes a change in a source-only package

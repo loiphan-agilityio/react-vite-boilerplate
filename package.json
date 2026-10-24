@@ -16,10 +16,12 @@
     "lint:fix": "turbo run lint:fix && oxlint --fix",
     "lint:slop": "oxlint",
     "test": "turbo run test",
+    "test:watch": "pnpm --filter web test:watch",
     "build-storybook": "turbo run build-storybook",
     "test:e2e": "turbo run test:e2e",
     "test:e2e:install": "pnpm --filter web test:e2e:install",
     "check": "turbo run lint lint:slop typecheck test && turbo run build build-storybook test:e2e",
+    "check:report": "node tools/check-report.mjs",
     "prepare": "husky"
   },
   "devDependencies": {

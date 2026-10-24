@@ -51,12 +51,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # `pnpm check` minus test:e2e, which runs in its own job, in parallel.
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm build-storybook
+      # `pnpm check` minus test:e2e, which runs in its own job, in parallel. tools/check-report.mjs
+      # runs every gate even after one fails and writes the checklist (pass rates, coverage) to the
+      # run's summary page.
+      - run: pnpm check:report --skip e2e
       # The generator exists only in the boilerplate: a project created from it has no create/.
       - name: Test the project generator
         if: ${{ hashFiles('create/index.test.js') != '' }}
@@ -89,8 +87,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web exec playwright install --with-deps chromium
       # Builds on mocks into dist-e2e/ and serves it with `vite preview`
-      # (apps/web/playwright.config.ts).
-      - run: pnpm test:e2e
+      # (apps/web/playwright.config.ts); the e2e pass rate goes to the run's summary page.
+      - run: pnpm check:report --only e2e
       # The deploy jobs publish the build these tests passed on. Once the app has a backend, upload
       # apps/web/dist/ from check's `pnpm build` (with VITE_API_URL) as `app` instead.
       - uses: actions/upload-artifact@v7
