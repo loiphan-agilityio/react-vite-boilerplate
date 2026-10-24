@@ -16,7 +16,7 @@ catalog:
   shadcn: ^4.22.1
   sonner: ^2.0.8
   tailwindcss: ^4.3.3
-  typescript: ~6.0.3
+  typescript: ~7.0.2
 peerDependencyRules:
   allowedVersions:
     # eslint-plugin-jsx-a11y 6.10.2 (last release 2024-10) declares eslint <=9 but works on
