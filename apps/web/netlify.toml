@@ -11,6 +11,14 @@
 [build.environment]
   NODE_VERSION = "24"
 
+# A file under assets/ that is gone (a tab still open on the previous release asks for an old
+# chunk) is a 404, not index.html: HTML served for a script fails the import with a MIME error,
+# and the immutable header below would cache it for a year. src/main.tsx reloads such a tab once.
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
 # Single-page app: a path that is not a file serves index.html, so deep links and reloads reach
 # React Router.
 [[redirects]]
