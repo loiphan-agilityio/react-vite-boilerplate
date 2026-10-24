@@ -10,7 +10,7 @@ export default defineConfig({
     '**/coverage/**',
     '**/playwright-report/**',
     '**/public/mockServiceWorker.js',
-    // shadcn generates these; never hand-edit them (packages/ui/CLAUDE.md, apps/web/CLAUDE.md).
+    // shadcn generates these; never hand-edit them (root CLAUDE.md, apps/web/CLAUDE.md).
     'packages/ui/src/components/**',
   ],
   jsPlugins: [
