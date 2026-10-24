@@ -1,11 +1,13 @@
 import { screen } from '@testing-library/react';
-import { http } from 'msw/http';
+import { http, HttpResponse } from 'msw/http';
 
+import { runEffect } from '@/lib/api/run';
 import { tokenStore } from '@/lib/api/token';
 import { config } from '@/lib/config';
 import { server } from '@/mocks/server';
 import { renderRoute } from '@/test/render';
 
+import { getMe } from '../api';
 import { mockPassword, mockToken, mockUser } from '../mocks';
 
 const signIn = async (user: ReturnType<typeof renderRoute>['user']) => {
@@ -92,5 +94,19 @@ describe('authentication', () => {
     tokenStore.set(mockToken);
     renderRoute('/');
     expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+  });
+
+  it('sends a signed-in visitor to /login when any request gets a 401', async () => {
+    tokenStore.set(mockToken);
+    const { router } = renderRoute('/');
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+
+    // Any request will do; the session expired on the server after the page loaded.
+    server.use(http.get(`${config.apiUrl}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
+    await expect(runEffect(getMe())).rejects.toMatchObject({ _tag: 'UnauthorizedError' });
+
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(tokenStore.get()).toBeNull();
   });
 });

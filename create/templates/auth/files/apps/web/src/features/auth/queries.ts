@@ -1,6 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { UnauthorizedError } from '@/lib/api/errors';
 import { runEffect } from '@/lib/api/run';
 import { tokenStore } from '@/lib/api/token';
 
@@ -14,17 +13,8 @@ export const authKeys = {
 export const meQueryOptions = () =>
   queryOptions({
     queryKey: authKeys.me(),
-    queryFn: async ({ signal }) => {
-      try {
-        return await runEffect(getMe(), signal);
-      } catch (error) {
-        // The API rejected the token (expired, revoked): drop it, or the sign-in request and every
-        // later one would still send it, and a backend that answers 401 to any bad bearer would
-        // refuse even the sign-in.
-        if (error instanceof UnauthorizedError) tokenStore.clear();
-        throw error;
-      }
-    },
+    // A 401 here (or to any other request) drops the token in the API layer: see `tokenStore.reject`.
+    queryFn: ({ signal }) => runEffect(getMe(), signal),
   });
 
 export const useSignIn = () => {

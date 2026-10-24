@@ -7,12 +7,12 @@
   {
     "file": "apps/web/src/lib/runtime.ts",
     "find": " * `AuthToken.none` sends no token; an app with sign-in provides `AuthToken.fromGetter(...)`.",
-    "replace": " * `AuthToken.fromGetter(tokenStore.get)` sends the signed-in user's token (see features/auth)."
+    "replace": " * `AuthToken.fromGetter(tokenStore.get, tokenStore.reject)` sends the signed-in user's token and\n * drops it when the API answers 401 to it (see features/auth)."
   },
   {
     "file": "apps/web/src/lib/runtime.ts",
-    "find": "Layer.mergeAll(AppConfig.layer, AuthToken.none)",
-    "replace": "Layer.mergeAll(AppConfig.layer, AuthToken.fromGetter(tokenStore.get))"
+    "find": "  Layer.provide(Layer.mergeAll(AppConfig.layer, AuthToken.none)),",
+    "replace": "  Layer.provide(\n    Layer.mergeAll(AppConfig.layer, AuthToken.fromGetter(tokenStore.get, tokenStore.reject)),\n  ),"
   },
   {
     "file": "apps/web/src/app/routes.tsx",
@@ -67,6 +67,6 @@
   {
     "file": "apps/web/CLAUDE.md",
     "find": "  objects when a lazy route loads, so each router needs fresh ones.",
-    "replace": "  objects when a lazy route loads, so each router needs fresh ones.\n- **Auth** (`src/features/auth`): email + password → JWT bearer token. `tokenStore` keeps it,\n  `AuthToken.fromGetter(tokenStore.get)` in `runtime.ts` sends it. A route that needs a signed-in\n  user goes inside `protectedRoutes([...])` in `app/routes.tsx`; `RequireAuth` loads `/auth/me` and\n  sends everyone else to `/login?redirect=…`. A test that renders a protected route sets\n  `tokenStore.set(mockToken)` in `beforeEach`. The mock API accepts `demo@example.com` / `password`."
+    "replace": "  objects when a lazy route loads, so each router needs fresh ones.\n- **Auth** (`src/features/auth`): email + password → JWT bearer token. `tokenStore` keeps it,\n  `AuthToken.fromGetter(tokenStore.get, tokenStore.reject)` in `runtime.ts` sends it, and a 401 to\n  any request drops it. A route that needs a signed-in user goes inside `protectedRoutes([...])` in\n  `app/routes.tsx`; `RequireAuth` loads `/auth/me` and sends everyone else (and anyone whose token\n  is dropped) to `/login?redirect=…`. A test that renders a protected route sets\n  `tokenStore.set(mockToken)` in `beforeEach`. The mock API accepts `demo@example.com` / `password`."
   }
 ]
