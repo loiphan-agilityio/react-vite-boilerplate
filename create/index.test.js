@@ -37,6 +37,36 @@ describe('create-react-vite-turbo', () => {
   });
   after(() => rm(tmp, { recursive: true, force: true }));
 
+  it('with --landing, replaces the home page with a landing page built without mocks', () => {
+    const landing = join(tmp, 'landing');
+    const { status, stderr, stdout } = run(landing, '--from', repo, '--landing');
+
+    assert.equal(status, 0, stderr);
+    assert.match(stdout, /a landing page/);
+    assert.match(read(landing, 'apps/web/src/app/home-page.tsx'), /people/);
+    assert.ok(!existsSync(join(landing, 'apps/web/src/assets/tech')));
+    assert.ok(!existsSync(join(landing, 'apps/web/src/features/auth')));
+    assert.match(read(landing, 'apps/web/public/robots.txt'), /Sitemap: /);
+    assert.ok(existsSync(join(landing, 'apps/web/public/sitemap.xml')));
+    assert.match(read(landing, 'apps/web/index.html'), /og:description/);
+    assert.match(read(landing, 'apps/web/netlify.toml'), /command = "pnpm build"/);
+    assert.match(read(landing, 'apps/web/playwright.config.ts'), /pnpm build --outDir dist-e2e/);
+  });
+
+  it('refuses a landing page with authentication', () => {
+    const { status, stderr } = run(
+      join(tmp, 'landing-auth'),
+      '--from',
+      repo,
+      '--landing',
+      '--auth',
+    );
+
+    assert.equal(status, 1);
+    assert.match(stderr, /no sign-in/);
+    assert.ok(!existsSync(join(tmp, 'landing-auth')));
+  });
+
   it('leaves no CLI and no template-only text in either project', () => {
     for (const dir of [auth, plain]) {
       assert.ok(!existsSync(join(dir, 'create')));

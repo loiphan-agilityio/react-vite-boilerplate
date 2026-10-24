@@ -1,0 +1,42 @@
+[
+  {
+    "file": "apps/web/index.html",
+    "find": "    <link rel=\"manifest\" href=\"/site.webmanifest\" />\n",
+    "replace": "    <link rel=\"manifest\" href=\"/site.webmanifest\" />\n    <!-- Link previews: replace the copy; add og:image as an absolute URL to a 1200 x 630 image. -->\n    <meta property=\"og:type\" content=\"website\" />\n    <meta property=\"og:title\" content=\"Acme: a landing page people understand\" />\n    <meta\n      property=\"og:description\"\n      content=\"Acme turns a one-line idea into a fast, accessible landing page that ranks and converts.\"\n    />\n    <meta name=\"twitter:card\" content=\"summary\" />\n"
+  },
+  {
+    "file": "apps/web/index.html",
+    "find": "content=\"A React 19 + Vite app: replace this with one sentence on what the app does for its users.\"",
+    "replace": "content=\"Acme turns a one-line idea into a fast, accessible landing page that ranks and converts.\""
+  },
+  {
+    "file": "apps/web/public/robots.txt",
+    "find": "Allow: /\n",
+    "replace": "Allow: /\n\nSitemap: https://www.example.com/sitemap.xml\n"
+  },
+  {
+    "file": "apps/web/playwright.config.ts",
+    "find": "command: `pnpm build:mock --outDir dist-e2e && pnpm preview --outDir dist-e2e --port ${port} --strictPort`,",
+    "replace": "// A landing page has no API to mock: e2e tests the production build.\n        command: `pnpm build --outDir dist-e2e && pnpm preview --outDir dist-e2e --port ${port} --strictPort`,"
+  },
+  {
+    "file": "apps/web/netlify.toml",
+    "find": "  # The mocked API: a new app has no backend yet. Once it has one, set VITE_API_URL and switch to\n  # `pnpm build` (here and in CI).\n  command = \"pnpm build:mock\"",
+    "replace": "  # A landing page has no API to mock.\n  command = \"pnpm build\""
+  },
+  {
+    "file": "apps/web/e2e/home.spec.ts",
+    "find": "name: /solid foundation/",
+    "replace": "name: /people understand/"
+  },
+  {
+    "file": "apps/web/e2e/home.spec.ts",
+    "find": "    // Only the local run is always the mock build (playwright.config.ts); a deploy built with\n    // `pnpm build` once the app has a backend starts no MSW, so it logs no warning.\n    if (!process.env.E2E_BASE_URL) {\n      expect(warnings.some((text) => text.startsWith('[MSW] Mocking is off'))).toBe(true);\n    }\n",
+    "replace": "    // A landing page builds without mocks, so it starts no MSW and logs no warning about it.\n"
+  },
+  {
+    "file": ".github/workflows/ci.yml",
+    "find": "      # Builds on mocks into dist-e2e/ and serves it with `vite preview`",
+    "replace": "      # Builds into dist-e2e/ (a landing page has no mocks) and serves it with `vite preview`"
+  }
+]
