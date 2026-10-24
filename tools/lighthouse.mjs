@@ -41,9 +41,9 @@ const args = [
   LIGHTHOUSE,
   url,
   `--only-categories=${categories.map(({ id }) => id).join(',')}`,
-  // A preview should not be indexed: once the drafts send `X-Robots-Tag: noindex` (they send
-  // none yet), this audit fails on each of them. The live site's robots.txt and headers are
-  // web-quality's SEO audit to check.
+  // CI's drafts send `X-Robots-Tag: noindex` (a preview must stay out of search results), which
+  // this audit fails on each of them. The live site's robots.txt and headers are web-quality's SEO
+  // audit to check.
   '--skip-audits=is-crawlable',
   '--output=json',
   '--output=html',

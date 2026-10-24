@@ -86,6 +86,25 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), cspMetaTag(), mockWorkerOnlyWhenMocking()],
   // Reads the `@/*` alias from tsconfig, so the alias is declared once.
   resolve: { tsconfigPaths: true },
+  build: {
+    rolldownOptions: {
+      output: {
+        // The libraries change far less often than the app: in chunks of their own, a deploy that
+        // touches only app code leaves them cached (assets/* are immutable for a year, see
+        // netlify.toml). One app chunk was 160 kB gzip, almost all of it these libraries.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react',
+              test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
+            },
+            { name: 'effect', test: /[\\/]node_modules[\\/]effect[\\/]/ },
+            { name: 'vendor', test: /[\\/]node_modules[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
