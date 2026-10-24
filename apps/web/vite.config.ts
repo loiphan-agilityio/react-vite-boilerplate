@@ -8,21 +8,23 @@ import { configDefaults } from 'vitest/config';
 
 /**
  * Content-Security-Policy of the built app. connect-src allows any https origin so a real
- * VITE_API_URL works without an edit here; narrow it to your API's origin once you know it.
- * 'unsafe-inline' styles: sonner inserts a <style> element. Scripts stay 'self' only.
+ * VITE_API_URL works without an edit here; narrow it to your API's origin once you know it. An
+ * http VITE_API_URL (a local backend, as in .env.example) adds its origin, or the browser blocks
+ * every API call. 'unsafe-inline' styles: sonner inserts a <style> element. Scripts stay 'self'.
  */
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
-  "font-src 'self' data:",
-  "connect-src 'self' https:",
-  "worker-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join('; ');
+const contentSecurityPolicy = (apiUrl: string) =>
+  [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "font-src 'self' data:",
+    `connect-src 'self' https:${apiUrl.startsWith('http://') ? ` ${new URL(apiUrl).origin}` : ''}`,
+    "worker-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ');
 
 /**
  * Adds the policy as a <meta> tag to the app's own index.html, in builds only: `pnpm dev` needs an
@@ -31,19 +33,22 @@ const contentSecurityPolicy = [
  */
 const cspMetaTag = (): Plugin => {
   let appIndexHtml = '';
+  let policy = '';
 
   return {
     name: 'csp-meta-tag',
     apply: 'build',
-    configResolved: ({ root }) => {
+    configResolved: ({ root, env }) => {
       appIndexHtml = resolve(root, 'index.html');
+      // env holds the VITE_* values Vite loaded for this build (.env, .env.local, the shell).
+      policy = contentSecurityPolicy(String(env.VITE_API_URL ?? ''));
     },
     transformIndexHtml: (html, { filename }) =>
       resolve(filename) === appIndexHtml
         ? [
             {
               tag: 'meta',
-              attrs: { 'http-equiv': 'Content-Security-Policy', content: contentSecurityPolicy },
+              attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
               injectTo: 'head-prepend',
             },
           ]
