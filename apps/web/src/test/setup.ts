@@ -30,15 +30,18 @@ Object.defineProperty(window, 'matchMedia', {
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });
+
 // sonner keeps toasts in a module-level store; without this a toast from one test shows up in the
 // next test's Toaster.
 beforeEach(() => {
   toast.dismiss();
 });
+
 // Drop per-test overrides added with server.use().
 afterEach(() => {
   server.resetHandlers();
 });
+
 afterAll(() => {
   server.close();
 });

@@ -19,11 +19,13 @@ export const meQueryOptions = () =>
 
 export const useSignIn = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (credentials: Credentials) => {
       // Sign-in sends no bearer: a token left from an earlier session (opened straight at /login)
       // would make a backend that answers 401 to any bad bearer refuse the sign-in itself.
       tokenStore.clear();
+
       return runEffect(signIn(credentials));
     },
     onSuccess: ({ token, user }) => {

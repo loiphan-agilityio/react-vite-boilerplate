@@ -4,6 +4,7 @@ import { authMocks, mockPassword, mockUser } from '../../mocks';
 import { LoginPage } from '.';
 
 const meta = { component: LoginPage } satisfies Meta<typeof LoginPage>;
+
 export default meta;
 
 type Story = StoryObj<typeof meta>;
@@ -13,6 +14,7 @@ const submit =
   (email: string, password: string): Story['play'] =>
   async ({ canvas, userEvent }) => {
     if (email) await userEvent.type(canvas.getByLabelText('Email'), email);
+
     if (password) await userEvent.type(canvas.getByLabelText('Password'), password);
     await userEvent.click(canvas.getByRole('button', { name: 'Sign in' }));
   };

@@ -21,13 +21,14 @@ if (import.meta.env.VITE_API_MOCKING === 'true' && config.apiMocking) {
   const { worker } = await import('@/mocks/browser');
   // A browser that refuses service workers (private windows, managed policies) still gets the
   // app: requests then reach the network, and data screens show their error state.
-  await worker.start({ onUnhandledFrame: 'bypass' }).catch((error: unknown) => {
-    console.warn('[MSW] Mocking is off: the service worker did not start.', error);
+  await worker.start({ onUnhandledFrame: 'bypass' }).catch((cause: unknown) => {
+    console.warn('[MSW] Mocking is off: the service worker did not start.', cause);
   });
 }
 
 const router = createBrowserRouter(createRoutes());
 const root = document.getElementById('root');
+
 if (!root) throw new Error('Missing #root element in index.html');
 
 createRoot(root).render(

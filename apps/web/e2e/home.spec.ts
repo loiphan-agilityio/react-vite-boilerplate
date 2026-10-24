@@ -5,6 +5,22 @@ test('renders the home page', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: /solid foundation/ })).toBeVisible();
 });
 
+// The tab and home-screen icons and the web app manifest are real files, not the SPA's index.html.
+test('serves its icons and web app manifest', async ({ request }) => {
+  for (const [path, type] of [
+    ['/favicon.svg', 'image/svg+xml'],
+    ['/apple-touch-icon.png', 'image/png'],
+    ['/icon-192.png', 'image/png'],
+    ['/icon-512.png', 'image/png'],
+    ['/site.webmanifest', 'application/manifest+json'],
+  ] as const) {
+    const response = await request.get(path);
+
+    expect(response.ok(), path).toBe(true);
+    expect(response.headers()['content-type'], path).toContain(type);
+  }
+});
+
 // The built index.html carries a Content-Security-Policy (vite.config.ts): the app must run under
 // it, with no violation logged (a blocked inline script or style, font or request).
 test('runs under its Content-Security-Policy', async ({ page }) => {
@@ -37,6 +53,7 @@ test.describe('when the browser blocks service workers', () => {
     });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
     // Only the local run is always the mock build (playwright.config.ts); a deploy built with
     // `pnpm build` once the app has a backend starts no MSW, so it logs no warning.
     if (!process.env.E2E_BASE_URL) {

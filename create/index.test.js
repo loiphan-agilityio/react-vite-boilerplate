@@ -23,17 +23,49 @@ describe('create-react-vite-turbo', () => {
     tmp = await mkdtemp(join(tmpdir(), 'rvb-'));
     auth = join(tmp, 'auth');
     plain = join(tmp, 'plain');
+
     for (const [dir, flag] of [
       [auth, '--auth'],
       [plain, '--no-auth'],
     ]) {
       const { status, stderr, stdout } = run(dir, '--from', repo, flag);
       assert.equal(status, 0, stderr);
+
       if (dir === auth) authOutput = stdout;
       else plainOutput = stdout;
     }
   });
   after(() => rm(tmp, { recursive: true, force: true }));
+
+  it('with --landing, replaces the home page with a landing page built without mocks', () => {
+    const landing = join(tmp, 'landing');
+    const { status, stderr, stdout } = run(landing, '--from', repo, '--landing');
+
+    assert.equal(status, 0, stderr);
+    assert.match(stdout, /a landing page/);
+    assert.match(read(landing, 'apps/web/src/app/home-page.tsx'), /people/);
+    assert.ok(!existsSync(join(landing, 'apps/web/src/assets/tech')));
+    assert.ok(!existsSync(join(landing, 'apps/web/src/features/auth')));
+    assert.match(read(landing, 'apps/web/public/robots.txt'), /Sitemap: /);
+    assert.ok(existsSync(join(landing, 'apps/web/public/sitemap.xml')));
+    assert.match(read(landing, 'apps/web/index.html'), /og:description/);
+    assert.match(read(landing, 'apps/web/netlify.toml'), /command = "pnpm build"/);
+    assert.match(read(landing, 'apps/web/playwright.config.ts'), /pnpm build --outDir dist-e2e/);
+  });
+
+  it('refuses a landing page with authentication', () => {
+    const { status, stderr } = run(
+      join(tmp, 'landing-auth'),
+      '--from',
+      repo,
+      '--landing',
+      '--auth',
+    );
+
+    assert.equal(status, 1);
+    assert.match(stderr, /no sign-in/);
+    assert.ok(!existsSync(join(tmp, 'landing-auth')));
+  });
 
   it('leaves no CLI and no template-only text in either project', () => {
     for (const dir of [auth, plain]) {
@@ -47,6 +79,7 @@ describe('create-react-vite-turbo', () => {
     assert.ok(read(plain, 'README.md').startsWith('# plain\n'));
     assert.ok(read(plain, 'CLAUDE.md').startsWith('# plain (monorepo)\n'));
     assert.ok(read(plain, 'apps/web/index.html').includes('<title>plain</title>'));
+    assert.equal(JSON.parse(read(plain, 'apps/web/public/site.webmanifest')).short_name, 'plain');
   });
 
   it('takes --name instead, as a valid package name', () => {
@@ -76,6 +109,7 @@ describe('create-react-vite-turbo', () => {
     const mocks = read(auth, 'apps/web/src/features/auth/mocks.ts');
     const email = /email: '([^']+)'/.exec(mocks)[1];
     const password = /mockPassword = '([^']+)'/.exec(mocks)[1];
+
     for (const text of [
       authOutput,
       read(auth, 'apps/web/src/features/auth/components/LoginPage/index.tsx'),
@@ -84,6 +118,7 @@ describe('create-react-vite-turbo', () => {
     ]) {
       assert.ok(text.includes(email) && text.includes(password));
     }
+
     assert.ok(!plainOutput.includes(email) && !read(plain, 'README.md').includes(email));
   });
 

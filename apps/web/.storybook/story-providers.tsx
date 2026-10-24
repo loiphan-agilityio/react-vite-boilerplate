@@ -8,6 +8,7 @@ import { createTestQueryClient } from '@/test/query-client';
 /** The providers a test gets (src/test/render.tsx): a fresh client without retries, a router, the Toaster. */
 export const StoryProviders = ({ children }: { readonly children: ReactNode }) => {
   const [queryClient] = useState(createTestQueryClient);
+
   return (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>{children}</MemoryRouter>

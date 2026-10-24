@@ -14,6 +14,7 @@ const renderRouter = (routes: RouteObject[], path: string) => {
   const queryClient = createTestQueryClient();
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const user = userEvent.setup();
+
   const result = render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
@@ -21,6 +22,7 @@ const renderRouter = (routes: RouteObject[], path: string) => {
       <Toaster richColors />
     </QueryClientProvider>,
   );
+
   return { ...result, user, queryClient, router };
 };
 

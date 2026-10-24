@@ -1,4 +1,4 @@
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 
 /** The request never got a response: offline, DNS failure, CORS, connection reset. */
 export class NetworkError extends Schema.TaggedError<NetworkError>()('NetworkError', {}) {}
@@ -49,21 +49,15 @@ export type ApiError =
   | InvalidResponseError;
 
 /** The message to show a user for an API failure. */
-export const toUserMessage = (error: ApiError): string => {
-  switch (error._tag) {
-    case 'NetworkError':
-      return 'Could not reach the server. Check your connection and try again.';
-    case 'UnauthorizedError':
-      return 'Your session has expired. Please sign in again.';
-    case 'ForbiddenError':
-      return 'You do not have permission to do this.';
-    case 'NotFoundError':
-      return 'We could not find what you were looking for.';
-    case 'ValidationError':
-      return error.message;
-    case 'ServerError':
-      return 'Something went wrong on our side. Please try again.';
-    case 'InvalidResponseError':
-      return 'The server sent an unexpected response. Please try again later.';
-  }
-};
+export const toUserMessage = (error: ApiError): string =>
+  Match.value(error).pipe(
+    Match.tagsExhaustive({
+      NetworkError: () => 'Could not reach the server. Check your connection and try again.',
+      UnauthorizedError: () => 'Your session has expired. Please sign in again.',
+      ForbiddenError: () => 'You do not have permission to do this.',
+      NotFoundError: () => 'We could not find what you were looking for.',
+      ValidationError: ({ message }) => message,
+      ServerError: () => 'Something went wrong on our side. Please try again.',
+      InvalidResponseError: () => 'The server sent an unexpected response. Please try again later.',
+    }),
+  );

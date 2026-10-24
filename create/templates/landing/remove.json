@@ -1,0 +1,5 @@
+[
+  "apps/web/src/app/home-page.tsx",
+  "apps/web/src/app/__tests__/home-page.test.tsx",
+  "apps/web/src/assets/tech"
+]

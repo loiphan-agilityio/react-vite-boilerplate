@@ -5,6 +5,7 @@ export const User = Schema.Struct({
   email: Schema.String,
   name: Schema.String,
 });
+
 export type User = (typeof User)['Type'];
 
 export const Credentials = Schema.Struct({
@@ -17,8 +18,10 @@ export const Credentials = Schema.Struct({
     Schema.check(Schema.isMinLength(1, { message: 'Enter your password.' })),
   ),
 });
+
 export type Credentials = (typeof Credentials)['Type'];
 
 /** What `POST /auth/login` answers: the JWT and the user it belongs to. */
 export const Session = Schema.Struct({ token: Schema.String, user: User });
+
 export type Session = (typeof Session)['Type'];

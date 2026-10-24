@@ -1,4 +1,4 @@
-import { Context, Effect, flow, Layer, Option, Schema } from 'effect';
+import { Context, Effect, flow, Layer, Match, Option, Schema } from 'effect';
 import {
   FetchHttpClient,
   HttpClient,
@@ -60,22 +60,22 @@ const fromStatus = (
 /** Maps Effect's transport-level errors onto the app's `ApiError` union. */
 const toApiError = (
   error: HttpClientError.HttpClientError | Schema.SchemaError,
-): Effect.Effect<never, ApiError> => {
-  if (error._tag === 'SchemaError') {
-    return Effect.fail(new InvalidResponseError({ message: error.message }));
-  }
-  switch (error.reason._tag) {
-    case 'StatusCodeError':
-      return fromStatus(error.reason.response);
-    case 'DecodeError':
-    case 'EmptyBodyError':
-      return Effect.fail(new InvalidResponseError({ message: error.message }));
-    case 'TransportError':
-    case 'EncodeError':
-    case 'InvalidUrlError':
-      return Effect.fail(new NetworkError());
-  }
-};
+): Effect.Effect<never, ApiError> =>
+  Match.value(error).pipe(
+    Match.tag('SchemaError', ({ message }) => Effect.fail(new InvalidResponseError({ message }))),
+    Match.orElse(({ message, reason }) =>
+      Match.value(reason).pipe(
+        Match.tagsExhaustive({
+          StatusCodeError: ({ response }) => fromStatus(response),
+          DecodeError: () => Effect.fail(new InvalidResponseError({ message })),
+          EmptyBodyError: () => Effect.fail(new InvalidResponseError({ message })),
+          TransportError: () => Effect.fail(new NetworkError()),
+          EncodeError: () => Effect.fail(new NetworkError()),
+          InvalidUrlError: () => Effect.fail(new NetworkError()),
+        }),
+      ),
+    ),
+  );
 
 /**
  * The only way the app talks to the backend. Every method decodes the response with the
@@ -94,16 +94,25 @@ export class ApiClient extends Context.Service<
     ) => Effect.Effect<S['Type'], ApiError, S['DecodingServices']>;
     readonly post: <S extends Schema.Constraint>(
       path: string,
+      // The outbound boundary: the body is JSON-encoded as given (a feature passes its own Schema
+      // type) and nothing reads it here, so it stays unknown.
+      // oxlint-disable-next-line anti-slop/no-unknown-parameters
       body: unknown,
       schema: S,
     ) => Effect.Effect<S['Type'], ApiError, S['DecodingServices']>;
     readonly put: <S extends Schema.Constraint>(
       path: string,
+      // The outbound boundary: the body is JSON-encoded as given (a feature passes its own Schema
+      // type) and nothing reads it here, so it stays unknown.
+      // oxlint-disable-next-line anti-slop/no-unknown-parameters
       body: unknown,
       schema: S,
     ) => Effect.Effect<S['Type'], ApiError, S['DecodingServices']>;
     readonly patch: <S extends Schema.Constraint>(
       path: string,
+      // The outbound boundary: the body is JSON-encoded as given (a feature passes its own Schema
+      // type) and nothing reads it here, so it stays unknown.
+      // oxlint-disable-next-line anti-slop/no-unknown-parameters
       body: unknown,
       schema: S,
     ) => Effect.Effect<S['Type'], ApiError, S['DecodingServices']>;
@@ -115,6 +124,7 @@ export class ApiClient extends Context.Service<
     Effect.gen(function* () {
       const { apiUrl } = yield* AppConfig;
       const auth = yield* AuthToken;
+
       const client = (yield* HttpClient.HttpClient).pipe(
         HttpClient.mapRequest(
           flow(HttpClientRequest.prependUrl(apiUrl), HttpClientRequest.acceptJson),
@@ -143,7 +153,7 @@ export class ApiClient extends Context.Service<
                 Effect.flatMap(handle),
                 Effect.catch(toApiError),
                 Effect.tapError((error) =>
-                  error._tag === 'UnauthorizedError' && Option.isSome(token)
+                  error instanceof UnauthorizedError && Option.isSome(token)
                     ? auth.rejected(token.value)
                     : Effect.void,
                 ),

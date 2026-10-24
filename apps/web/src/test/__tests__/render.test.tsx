@@ -5,6 +5,7 @@ import { renderWithProviders } from '../render';
 
 const Where = () => {
   const { pathname, search, hash } = useLocation();
+
   return <p>{`at ${pathname}${search}${hash}`}</p>;
 };
 

@@ -17,8 +17,10 @@ export const runEffect = async <A, E extends ApiError>(
   signal?: AbortSignal,
 ): Promise<A> => {
   const exit = await runtime.runPromiseExit(effect, { signal });
+
   if (Exit.isSuccess(exit)) return exit.value;
   const failure = Cause.findErrorOption(exit.cause);
+
   if (Option.isSome(failure)) throw failure.value;
   // Defects (bugs) and interruptions: rethrow as-is so they surface instead of hiding.
   throw Cause.squash(exit.cause);
