@@ -23,6 +23,7 @@
     "check": "turbo run lint lint:slop typecheck test && turbo run build build-storybook test:e2e",
     "check:report": "node tools/check-report.mjs",
     "lighthouse": "node tools/lighthouse.mjs",
+    "test:tools": "node --test \"tools/test/*.test.mjs\"",
     "prepare": "husky"
   },
   "devDependencies": {
