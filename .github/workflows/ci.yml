@@ -7,7 +7,9 @@
 # - deploy-draft: once both pass, the app and Storybook they built go to Netlify as a draft:
 #   `pr-<number>--<site>` on a pull request, a unique draft URL on a push to main.
 # - e2e-deployed: the same Playwright tests against that deploy URL.
-# - deploy-production (push to main only): once the deployed e2e tests pass, the same files go live.
+# - lighthouse: Lighthouse (mobile) on that deploy URL; accessibility under 100 or SEO under 95
+#   fails it, performance and best practices only warn (tools/lighthouse.mjs).
+# - deploy-production (push to main only): once both pass, the same files go live.
 #
 # Deploys need the NETLIFY_AUTH_TOKEN secret and the NETLIFY_SITE_ID variable (Settings > Secrets
 # and variables > Actions); NETLIFY_STORYBOOK_SITE_ID adds a second site for Storybook. Without
@@ -190,9 +192,30 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 14
 
+  lighthouse:
+    name: 'Lighthouse: Netlify draft'
+    needs: deploy-draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # The script needs Node only: Lighthouse comes through npx, Chrome is on the runner.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node tools/lighthouse.mjs "$URL"
+        env:
+          URL: ${{ needs.deploy-draft.outputs.url }}
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse
+          path: lighthouse/
+          if-no-files-found: ignore
+          retention-days: 14
+
   deploy-production:
     name: 'Deploy: Netlify production'
-    needs: e2e-deployed
+    needs: [e2e-deployed, lighthouse]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     # Approvals or branch rules for production can be set on this environment in the settings.

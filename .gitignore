@@ -15,3 +15,4 @@ blob-report/
 # Written by `msw init` (postinstall) from the installed msw, so it always matches its version.
 **/public/mockServiceWorker.js
 check-report.json
+lighthouse/

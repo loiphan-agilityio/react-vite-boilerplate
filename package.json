@@ -22,6 +22,7 @@
     "test:e2e:install": "pnpm --filter web test:e2e:install",
     "check": "turbo run lint lint:slop typecheck test && turbo run build build-storybook test:e2e",
     "check:report": "node tools/check-report.mjs",
+    "lighthouse": "node tools/lighthouse.mjs",
     "prepare": "husky"
   },
   "devDependencies": {
