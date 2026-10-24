@@ -14,6 +14,9 @@
 # A file under assets/ that is gone (a tab still open on the previous release asks for an old
 # chunk) is a 404, not index.html: HTML served for a script fails the import with a MIME error,
 # and the immutable header below would cache it for a year. src/main.tsx reloads such a tab once.
+# Netlify matches headers by the requested path, so this 404 carries that immutable header too (a
+# no-store rule for /404.html does not reach it): after a rollback to a release that has the file, a
+# browser that got the 404 needs a hard reload.
 [[redirects]]
   from = "/assets/*"
   to = "/404.html"
@@ -49,10 +52,3 @@
   for = "/mockServiceWorker.js"
   [headers.values]
     Cache-Control = "no-cache"
-
-# The 404 for a gone asset (the first redirect) must not be cached: a rollback to the release that
-# has the file would otherwise stay broken in that browser.
-[[headers]]
-  for = "/404.html"
-  [headers.values]
-    Cache-Control = "no-store"
