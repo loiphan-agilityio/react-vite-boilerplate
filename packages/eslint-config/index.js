@@ -57,6 +57,7 @@ export default defineConfig([
   // .claude holds Claude Code skills (their templates and examples are not part of this app).
   globalIgnores([
     '**/dist/',
+    '**/dist-e2e/',
     '**/coverage/',
     '**/storybook-static/',
     '**/playwright-report/',
