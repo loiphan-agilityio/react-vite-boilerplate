@@ -11,8 +11,9 @@
 #
 # Deploys need the NETLIFY_AUTH_TOKEN secret and the NETLIFY_SITE_ID variable (Settings > Secrets
 # and variables > Actions); NETLIFY_STORYBOOK_SITE_ID adds a second site for Storybook. Without
-# NETLIFY_SITE_ID the deploy jobs are skipped, and so are pull requests from forks, which get no
-# secrets.
+# NETLIFY_SITE_ID the deploy jobs are skipped, and so are pull requests from forks and Dependabot's,
+# which get no Actions secrets: their checks and mock-build e2e still run, and main deploys after
+# the merge.
 name: CI
 
 on:
@@ -87,7 +88,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web exec playwright install --with-deps chromium
-      # Builds on mocks into dist-e2e/ and serves it with `vite preview` (apps/web/playwright.config.ts).
+      # Builds on mocks into dist-e2e/ and serves it with `vite preview`
+      # (apps/web/playwright.config.ts).
       - run: pnpm test:e2e
       # The deploy jobs publish the build these tests passed on. Once the app has a backend, upload
       # apps/web/dist/ from check's `pnpm build` (with VITE_API_URL) as `app` instead.
@@ -109,6 +111,7 @@ jobs:
     needs: [check, e2e]
     if: >-
       vars.NETLIFY_SITE_ID != '' &&
+      github.actor != 'dependabot[bot]' &&
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
