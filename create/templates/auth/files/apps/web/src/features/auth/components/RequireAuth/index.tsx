@@ -2,6 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/alert';
 import { Button } from '@repo/ui/components/button';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { toUserMessage } from '@/lib/api/errors';
@@ -14,7 +15,8 @@ export const RequireAuth = () => {
   const { pathname, search, hash } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const hasToken = tokenStore.get() !== null;
+  // Re-renders when the token is set or dropped (a 401 to any request, a sign-out in another tab).
+  const hasToken = useSyncExternalStore(tokenStore.subscribe, tokenStore.get) !== null;
   const me = useQuery({ ...meQueryOptions(), enabled: hasToken });
 
   if (!hasToken || me.error?._tag === 'UnauthorizedError') {

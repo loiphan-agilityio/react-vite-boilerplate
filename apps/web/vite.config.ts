@@ -11,6 +11,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // `pnpm check` runs lint, typecheck, build and Storybook alongside the tests. With a worker per
+    // core the machine was oversubscribed: workers failed to start ("Failed to start forks worker")
+    // and lazy routes loaded past the findBy* timeout. Half the cores leaves room for the rest.
+    maxWorkers: '50%',
+    // Above setup.ts's 5s findBy* timeout, so a slow element fails as a missing element (with the
+    // DOM printed), not as a bare test timeout.
+    testTimeout: 10_000,
     css: false,
     coverage: {
       provider: 'v8',

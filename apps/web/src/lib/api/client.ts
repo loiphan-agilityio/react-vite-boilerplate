@@ -119,30 +119,42 @@ export class ApiClient extends Context.Service<
         HttpClient.mapRequest(
           flow(HttpClientRequest.prependUrl(apiUrl), HttpClientRequest.acceptJson),
         ),
-        // `Authorization: Bearer <token>` whenever AuthToken has one (see auth.ts).
-        HttpClient.mapRequestEffect((request) =>
-          auth.get.pipe(
-            Effect.map(
-              Option.match({
-                onNone: () => request,
-                onSome: (token) => HttpClientRequest.bearerToken(request, token),
-              }),
-            ),
-          ),
-        ),
         HttpClient.filterStatusOk,
       );
+
+      // `Authorization: Bearer <token>` whenever AuthToken has one (see auth.ts). The token is read
+      // once per request, so a 401 names the token it rejected (`AuthToken.rejected`).
+      const execute = <A, R>(
+        request: HttpClientRequest.HttpClientRequest,
+        handle: (
+          response: HttpClientResponse.HttpClientResponse,
+        ) => Effect.Effect<A, HttpClientError.HttpClientError | Schema.SchemaError, R>,
+      ) =>
+        auth.get.pipe(
+          Effect.flatMap((token) =>
+            client
+              .execute(
+                Option.match(token, {
+                  onNone: () => request,
+                  onSome: (value) => HttpClientRequest.bearerToken(request, value),
+                }),
+              )
+              .pipe(
+                Effect.flatMap(handle),
+                Effect.catch(toApiError),
+                Effect.tapError((error) =>
+                  error._tag === 'UnauthorizedError' && Option.isSome(token)
+                    ? auth.rejected(token.value)
+                    : Effect.void,
+                ),
+              ),
+          ),
+        );
 
       const send = <S extends Schema.Constraint>(
         request: HttpClientRequest.HttpClientRequest,
         schema: S,
-      ) =>
-        client
-          .execute(request)
-          .pipe(
-            Effect.flatMap(HttpClientResponse.schemaBodyJson(schema)),
-            Effect.catch(toApiError),
-          );
+      ) => execute(request, HttpClientResponse.schemaBodyJson(schema));
 
       return ApiClient.of({
         get: (path, schema, { urlParams = {} } = {}) =>
@@ -153,10 +165,7 @@ export class ApiClient extends Context.Service<
           send(HttpClientRequest.put(path).pipe(HttpClientRequest.bodyJsonUnsafe(body)), schema),
         patch: (path, body, schema) =>
           send(HttpClientRequest.patch(path).pipe(HttpClientRequest.bodyJsonUnsafe(body)), schema),
-        delete: (path) =>
-          client
-            .execute(HttpClientRequest.delete(path))
-            .pipe(Effect.asVoid, Effect.catch(toApiError)),
+        delete: (path) => execute(HttpClientRequest.delete(path), () => Effect.void),
       });
     }),
   ).pipe(Layer.provide(FetchHttpClient.layer));

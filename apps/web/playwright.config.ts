@@ -1,8 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // E2E_BASE_URL points the tests at a running app: CI sets it to the Netlify deploy URL. Without it,
-// Playwright builds the app on the mocked API (`pnpm build:mock`) and serves `dist/` with
-// `vite preview`, the same build CI deploys.
+// Playwright builds the app on the mocked API (`pnpm build:mock`) and serves it with
+// `vite preview`, the same build CI deploys. It builds into `dist-e2e/`, not `dist/`: `pnpm check`
+// runs `build` alongside, and both writing `dist/` left whichever finished last there (and in
+// turbo's cache of `build`).
 // An empty value (`E2E_BASE_URL=`, an empty CI output) counts as unset, as in `webServer` below.
 const deployedUrl = process.env.E2E_BASE_URL === '' ? undefined : process.env.E2E_BASE_URL;
 const isCI = Boolean(process.env.CI);
@@ -26,7 +28,7 @@ export default defineConfig({
   webServer: deployedUrl
     ? []
     : {
-        command: `pnpm build:mock && pnpm preview --port ${port} --strictPort`,
+        command: `pnpm build:mock --outDir dist-e2e && pnpm preview --outDir dist-e2e --port ${port} --strictPort`,
         url: `http://localhost:${port}`,
         reuseExistingServer: !isCI,
         timeout: 120_000,

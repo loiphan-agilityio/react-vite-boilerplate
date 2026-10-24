@@ -107,4 +107,25 @@ describe('ApiClient layers', () => {
       ),
     ).resolves.toEqual({ id: 1 });
   });
+
+  it.each([
+    ['the token a 401 rejected', 'secret', 401, ['secret']],
+    ['nothing when no token was sent', null, 401, []],
+    ['nothing for another error', 'secret', 403, []],
+  ])('reports %s to AuthToken.rejected', async (_, token, status, expected) => {
+    server.use(http.get(url, () => HttpResponse.json({}, { status })));
+    const rejected: string[] = [];
+    await expect(
+      runWith(
+        Layer.mergeAll(
+          appConfig(config.apiUrl),
+          AuthToken.fromGetter(
+            () => token,
+            (value) => rejected.push(value),
+          ),
+        ),
+      ),
+    ).rejects.toBeDefined();
+    expect(rejected).toEqual(expected);
+  });
 });

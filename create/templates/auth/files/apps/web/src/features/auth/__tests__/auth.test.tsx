@@ -1,8 +1,13 @@
 import { screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw/http';
 
+import { runEffect } from '@/lib/api/run';
 import { tokenStore } from '@/lib/api/token';
+import { config } from '@/lib/config';
+import { server } from '@/mocks/server';
 import { renderRoute } from '@/test/render';
 
+import { getMe } from '../api';
 import { mockPassword, mockToken, mockUser } from '../mocks';
 
 const signIn = async (user: ReturnType<typeof renderRoute>['user']) => {
@@ -39,6 +44,49 @@ describe('authentication', () => {
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
   });
 
+  it('drops a token the API rejects, so signing in again does not send it', async () => {
+    const sent: (string | null)[] = [];
+    // Returns nothing, so the request falls through to the default login handler.
+    server.use(
+      http.post(`${config.apiUrl}/auth/login`, ({ request }) => {
+        sent.push(request.headers.get('Authorization'));
+      }),
+    );
+    tokenStore.set('expired');
+    const { user } = renderRoute('/');
+    await screen.findByRole('heading', { name: 'Sign in' });
+    expect(tokenStore.get()).toBeNull();
+
+    await signIn(user);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+    expect(sent).toEqual([null]);
+  });
+
+  it('signs in at /login without sending a token left from an earlier session', async () => {
+    const sent: (string | null)[] = [];
+    server.use(
+      http.post(`${config.apiUrl}/auth/login`, ({ request }) => {
+        sent.push(request.headers.get('Authorization'));
+      }),
+    );
+    tokenStore.set('expired');
+    const { user } = renderRoute('/login');
+
+    await signIn(user);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+    expect(sent).toEqual([null]);
+  });
+
+  it("does not keep the previous session's cached data after signing in", async () => {
+    tokenStore.set('expired');
+    const { user, queryClient } = renderRoute('/');
+    queryClient.setQueryData(['invoices'], ['previous user invoice']);
+
+    await signIn(user);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+    expect(queryClient.getQueryData(['invoices'])).toBeUndefined();
+  });
+
   it('returns to the query string and hash of the page after signing in', async () => {
     const { user, router } = renderRoute('/?tab=open#top');
     await signIn(user);
@@ -61,5 +109,19 @@ describe('authentication', () => {
     tokenStore.set(mockToken);
     renderRoute('/');
     expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+  });
+
+  it('sends a signed-in visitor to /login when any request gets a 401', async () => {
+    tokenStore.set(mockToken);
+    const { router } = renderRoute('/');
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+
+    // Any request will do; the session expired on the server after the page loaded.
+    server.use(http.get(`${config.apiUrl}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
+    await expect(runEffect(getMe())).rejects.toMatchObject({ _tag: 'UnauthorizedError' });
+
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(tokenStore.get()).toBeNull();
   });
 });

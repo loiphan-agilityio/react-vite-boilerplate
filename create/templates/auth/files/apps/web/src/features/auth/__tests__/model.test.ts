@@ -21,6 +21,11 @@ describe('safeRedirect', () => {
     ['/\n/evil.example'],
     ['/\r/evil.example'],
     ['/\t/['],
+    ['/.//evil.example'],
+    ['/..//evil.example'],
+    ['/%2e//evil.example'],
+    ['/a/..//evil.example'],
+    ['/./\\evil.example'],
     ['javascript:alert(1)'],
   ])('falls back to / for %s', (value) => {
     expect(safeRedirect(value)).toBe('/');

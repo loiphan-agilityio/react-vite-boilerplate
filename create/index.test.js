@@ -50,7 +50,9 @@ describe('create-react-vite-turbo', () => {
   it('with auth, adds the feature and wires it in', () => {
     assert.ok(existsSync(join(auth, 'apps/web/src/features/auth/routes.tsx')));
     assert.ok(
-      read(auth, 'apps/web/src/lib/runtime.ts').includes('AuthToken.fromGetter(tokenStore.get)'),
+      read(auth, 'apps/web/src/lib/runtime.ts').includes(
+        'AuthToken.fromGetter(tokenStore.get, tokenStore.reject)',
+      ),
     );
     assert.ok(read(auth, 'apps/web/src/app/routes.tsx').includes('protectedRoutes('));
   });
