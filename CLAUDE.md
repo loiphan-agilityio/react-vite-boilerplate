@@ -40,7 +40,7 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm build` | Production build (apps only; packages have no build). |
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
-| `pnpm check` | All six gates (`turbo run lint typecheck test build build-storybook test:e2e`). **Run before calling work done.** |
+| `pnpm check` | All six gates, in two turbo runs: `lint typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
   script from inside the package (`cd apps/web`, then `pnpm test:watch`).
