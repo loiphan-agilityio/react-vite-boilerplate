@@ -13,6 +13,7 @@
       "Bash(pnpm build)",
       "Bash(pnpm build-storybook)",
       "Bash(pnpm check)",
+      "Bash(pnpm check:report)",
       "Bash(pnpm dev:mock)"
     ]
   },
