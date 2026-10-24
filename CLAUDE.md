@@ -15,7 +15,9 @@ packages/
     src/styles/globals.css  Tailwind 4 theme tokens, fonts, base layer
   eslint-config/        @repo/eslint-config: the shared ESLint flat config (index.js)
   typescript-config/    @repo/typescript-config: base.json, react.json, node.json
-package.json            root scripts (turbo), lint-staged and commitlint config
+tools/oxlint/anti-slop/ anti-slop's Oxlint rules, vendored (UPSTREAM.md: source, commit, changes)
+oxlint.config.ts        anti-slop's rules, generic and Effect, for `pnpm lint:slop`
+package.json            root scripts (turbo) and commitlint config; lint-staged.config.mjs
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
 .github/workflows/ci.yml  CI/CD: gates, e2e, Netlify deploy of apps/web, e2e on it, production
@@ -34,13 +36,13 @@ From the root, each runs through turbo in every package that has the script:
 | Command | What it does |
 |---|---|
 | `pnpm dev` | `web` dev server. `pnpm dev:mock` serves its API from MSW mocks. |
-| `pnpm lint` | ESLint and `prettier --check`. `pnpm lint:fix` fixes and formats (uncached). |
+| `pnpm lint` | ESLint, `prettier --check` and anti-slop (Oxlint, `oxlint.config.ts`). `pnpm lint:fix` fixes and formats (uncached). |
 | `pnpm typecheck` | Type-check. |
 | `pnpm test` | Vitest, with coverage. |
 | `pnpm build` | Production build (apps only; packages have no build). |
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
-| `pnpm check` | All six gates, in two turbo runs: `lint typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
+| `pnpm check` | All six gates, in two turbo runs: `lint lint:slop typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
 
 - One package: `pnpm --filter <name> <script>` (`pnpm --filter web storybook`), or run the
   script from inside the package (`cd apps/web`, then `pnpm test:watch`).

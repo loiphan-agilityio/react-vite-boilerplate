@@ -8,6 +8,9 @@
     "lint": {
       "dependsOn": ["transit"]
     },
+    "//#lint:slop": {
+      "cache": false
+    },
     "typecheck": {
       "dependsOn": ["transit"]
     },
