@@ -16,7 +16,9 @@ const Env = Schema.Struct({
 export const parseConfig = (raw: unknown) => {
   const { VITE_API_URL, VITE_API_MOCKING } = Schema.decodeUnknownSync(Env)(raw);
   return {
-    apiUrl: VITE_API_URL ?? '/api',
+    // An empty value (`VITE_API_URL=` in .env.local, an unset CI variable) counts as unset: '' would
+    // send every request to the page's own host, which answers with index.html.
+    apiUrl: VITE_API_URL === undefined || VITE_API_URL === '' ? '/api' : VITE_API_URL,
     apiMocking: VITE_API_MOCKING === 'true',
   } as const;
 };
