@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -71,6 +71,24 @@ describe('create-react-vite-turbo', () => {
     for (const dir of [auth, plain]) {
       assert.ok(!existsSync(join(dir, 'create')));
       assert.ok(!read(dir, 'CLAUDE.md').includes('template-only'));
+    }
+  });
+
+  it('starts the app with no example feature: nothing in its src names todos', () => {
+    // The web-dev plugin's verify.sh holds new projects to the same rule (`grep -rniI todo`): the
+    // todos feature is only the skills' worked example.
+    for (const dir of [auth, plain]) {
+      const src = join(dir, 'apps/web/src');
+
+      const files = readdirSync(src, { recursive: true, withFileTypes: true }).filter((entry) =>
+        entry.isFile(),
+      );
+
+      for (const file of files) {
+        const path = join(file.parentPath, file.name);
+
+        assert.doesNotMatch(readFileSync(path, 'utf8'), /todo/i, path);
+      }
     }
   });
 
