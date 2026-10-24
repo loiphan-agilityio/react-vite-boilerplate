@@ -81,7 +81,8 @@ Lint enforces it, and `func-style` has no autofix, so write it this way from the
   `onClick={() => setOpen(true)}` (`no-confusing-void-expression`).
 - Inline type imports (`import { type Item, NewItem } from './schemas'`); `pnpm lint:fix`
   fixes most of the rest and formats.
-- anti-slop (`pnpm lint:slop`, part of `pnpm lint`) rejects low-evidence code: a type assertion
+- anti-slop (part of `pnpm lint` here and at the root; `pnpm lint:slop` at the root runs it
+  alone) rejects low-evidence code: a type assertion
   without a `// SAFETY:` comment on the invariant, `as unknown as`, `unknown` or `object` in a
   function's parameters or return type (parse at the boundary instead; a catch argument is named
   `cause`), `typeof` narrowing outside a parser, `vi.mock` of a module, comparing or building
@@ -246,7 +247,7 @@ tokens in `src/styles/index.css`, use `@repo/ui/components/<x>`, `packages/ui/sr
 - `ui-development` — a design (screenshot, mockup, Figma, DESIGN.md; asks once if none) → a UI
   that matches it: tokens, shadcn components, states, tests, visual check.
 
-Companion skills (installed by `install-companions.sh`): `shadcn`, `react-router-data-mode`,
+Companion skills (installed by the web-dev plugin's `install-companions.sh`): `shadcn`, `react-router-data-mode`,
 `vite`, `vitest`, `vercel-react-best-practices`, `vercel-composition-patterns`,
 `react-hook-form`, `react-testing`.
 

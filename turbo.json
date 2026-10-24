@@ -6,9 +6,13 @@
       "dependsOn": ["^transit"]
     },
     "lint": {
-      "dependsOn": ["transit"]
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/oxlint.config.ts", "$TURBO_ROOT$/tools/oxlint/**"]
     },
     "//#lint:slop": {
+      "cache": false
+    },
+    "//#lint:root": {
       "cache": false
     },
     "typecheck": {

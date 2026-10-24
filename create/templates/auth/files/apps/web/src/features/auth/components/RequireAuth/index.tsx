@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router';
 
-import { toUserMessage } from '@/lib/api/errors';
+import { toUserMessage, UnauthorizedError } from '@/lib/api/errors';
 import { tokenStore } from '@/lib/api/token';
 
 import { meQueryOptions } from '../../queries';
@@ -37,7 +37,7 @@ export const RequireAuth = () => {
     void navigate('/login');
   };
 
-  if (!hasToken || me.error?._tag === 'UnauthorizedError') {
+  if (!hasToken || me.error instanceof UnauthorizedError) {
     return (
       <Navigate to={`/login?redirect=${encodeURIComponent(pathname + search + hash)}`} replace />
     );

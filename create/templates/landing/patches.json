@@ -38,5 +38,30 @@
     "file": ".github/workflows/ci.yml",
     "find": "      # Builds on mocks into dist-e2e/ and serves it with `vite preview`",
     "replace": "      # Builds into dist-e2e/ (a landing page has no mocks) and serves it with `vite preview`"
+  },
+  {
+    "file": "apps/web/playwright.config.ts",
+    "find": "// Playwright builds the app on the mocked API (`pnpm build:mock`) and serves it with",
+    "replace": "// Playwright builds the landing page (`pnpm build`: it has no mocks) and serves it with"
+  },
+  {
+    "file": ".github/workflows/ci.yml",
+    "find": "# - e2e: the Playwright tests against the app built on the mocked API (`pnpm build:mock`).",
+    "replace": "# - e2e: the Playwright tests against the landing page's production build (`pnpm build`)."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`;",
+    "replace": "Playwright (`e2e/`, Chromium): builds the app (`pnpm build`: a landing page has no mocks) and serves it with `vite preview`;"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "playwright.config.ts  the e2e runner: mock build + `vite preview`, or E2E_BASE_URL",
+    "replace": "playwright.config.ts  the e2e runner: production build + `vite preview`, or E2E_BASE_URL"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "   (`pnpm test:e2e` on the mock build) in parallel.\n2. **deploy-draft**: the mock build **e2e** tested",
+    "replace": "   (`pnpm test:e2e` on the production build: a landing page has no mocks) in parallel.\n2. **deploy-draft**: the build **e2e** tested"
   }
 ]

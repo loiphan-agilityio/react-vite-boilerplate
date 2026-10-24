@@ -43,7 +43,8 @@ export const e2eDetail = (stats) => {
 };
 
 /**
- * The gates `--only` and `--skip` leave, in their order.
+ * The gates `--only` and `--skip` leave, in their order. A name that is no gate, or a selection
+ * that leaves none, throws: a typo in CI must not turn the step into a green no-op.
  * @template {{ id: string }} G
  * @param {G[]} gates
  * @param {string | undefined} only comma-separated ids
@@ -53,8 +54,18 @@ export const selectGates = (gates, only, skip) => {
   const listed = (/** @type {string | undefined} */ list) => new Set(list?.split(',') ?? []);
   const keep = listed(only);
   const drop = listed(skip);
+  const ids = new Set(gates.map(({ id }) => id));
+  const unknown = [...keep, ...drop].filter((id) => !ids.has(id));
 
-  return gates.filter(({ id }) => (keep.size === 0 || keep.has(id)) && !drop.has(id));
+  if (unknown.length > 0) {
+    throw new Error(`no gate named ${unknown.join(', ')} (gates: ${[...ids].join(', ')})`);
+  }
+
+  const selected = gates.filter(({ id }) => (keep.size === 0 || keep.has(id)) && !drop.has(id));
+
+  if (selected.length === 0) throw new Error('--only and --skip leave no gate to run');
+
+  return selected;
 };
 
 /**

@@ -37,14 +37,14 @@ From the root, each runs through turbo in every package that has the script:
 | Command | What it does |
 |---|---|
 | `pnpm dev` | `web` dev server. `pnpm dev:mock` serves its API from MSW mocks. |
-| `pnpm lint` | ESLint, `prettier --check` and anti-slop (Oxlint, `oxlint.config.ts`). `pnpm lint:fix` fixes and formats (uncached). |
+| `pnpm lint` | ESLint and `prettier --check` in each package, anti-slop (Oxlint, `oxlint.config.ts`) and `prettier --check .` over the root files (`lint:root`: `tools/`, `.github/`, the configs). `pnpm lint:fix` fixes and formats (uncached). |
 | `pnpm typecheck` | Type-check. |
 | `pnpm test` | Vitest, with coverage. |
 | `pnpm test:watch` | Vitest in watch mode: re-runs the tests a saved file affects, until stopped. Keep it running in a terminal of its own while writing code. |
 | `pnpm build` | Production build (apps only; packages have no build). |
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
-| `pnpm check` | All six gates, in two turbo runs: `lint lint:slop typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
+| `pnpm check` | All six gates, in two turbo runs: `lint lint:slop lint:root typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
 | `pnpm lighthouse <url>` | Lighthouse 13.5 (mobile) on a deployed or previewed page (`pnpm build`, then `pnpm --filter web preview`): accessibility under 100 or SEO under 95 fails, performance and best practices warn (`tools/lighthouse.mjs`). Reports in `lighthouse/`. CI runs it on each Netlify draft. |
 | `pnpm test:tools` | The tests of `tools/lib/` (what `check:report` and `lighthouse` conclude from their tools' output), Node's test runner. CI's check job runs them. |
 | `pnpm check:report` | The gates of `pnpm check` one after another, going on after a failure, then the output checklist: each gate pass/fail, the unit and e2e pass rates (%), line coverage and times (`tools/check-report.mjs`; `--only` / `--skip` pick gates). Markdown on stdout and in CI's run summary, JSON in `check-report.json`. |
