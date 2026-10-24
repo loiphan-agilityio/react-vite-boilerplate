@@ -62,6 +62,21 @@ describe('authentication', () => {
     expect(sent).toEqual([null]);
   });
 
+  it('signs in at /login without sending a token left from an earlier session', async () => {
+    const sent: (string | null)[] = [];
+    server.use(
+      http.post(`${config.apiUrl}/auth/login`, ({ request }) => {
+        sent.push(request.headers.get('Authorization'));
+      }),
+    );
+    tokenStore.set('expired');
+    const { user } = renderRoute('/login');
+
+    await signIn(user);
+    expect(await screen.findByText(mockUser.name)).toBeInTheDocument();
+    expect(sent).toEqual([null]);
+  });
+
   it("does not keep the previous session's cached data after signing in", async () => {
     tokenStore.set('expired');
     const { user, queryClient } = renderRoute('/');
