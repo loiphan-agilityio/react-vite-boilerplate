@@ -11,6 +11,11 @@ const isCI = Boolean(process.env.CI);
 
 // GitHub Actions turns the github reporter's lines into annotations; elsewhere they are noise.
 const onGitHub = Boolean(process.env.GITHUB_ACTIONS);
+
+// tools/check-report.mjs sets the json reporter's output file to read the pass rate. Added here,
+// not with --reporter on the command line, which would replace the reporters above (CI's
+// annotations and the playwright-report/ it uploads on failure).
+const jsonReport = process.env.PLAYWRIGHT_JSON_OUTPUT_NAME ? [['json'] as const] : [];
 const port = 4173;
 
 export default defineConfig({
@@ -18,9 +23,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  reporter: onGitHub
-    ? [['github'], ['html', { open: 'never' }]]
-    : [['list'], ['html', { open: 'never' }]],
+  reporter: [onGitHub ? ['github'] : ['list'], ['html', { open: 'never' }], ...jsonReport],
   use: {
     baseURL: deployedUrl ?? `http://localhost:${port}`,
     trace: 'on-first-retry',

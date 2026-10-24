@@ -7,7 +7,8 @@
 //
 // Gates: lint, typecheck, unit, build, storybook, e2e. The checklist is Markdown on stdout, is
 // appended to $GITHUB_STEP_SUMMARY when CI sets it, and is written as JSON to check-report.json.
-// Exits 1 when a gate fails. What the results mean lives in tools/lib/check-report.mjs (tested).
+// Exits 1 when a gate fails, 2 for a gate name that is not one. What the results mean lives in
+// tools/lib/check-report.mjs (tested).
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -50,13 +51,25 @@ const gates = [
   {
     id: 'e2e',
     name: 'E2E (Playwright)',
-    command: 'pnpm --filter web exec playwright test --reporter=list,json',
+    // The json reporter comes from playwright.config.ts when PLAYWRIGHT_JSON_OUTPUT_NAME is set: a
+    // --reporter here would drop the config's (CI's annotations, the html report CI uploads).
+    command: 'pnpm --filter web exec playwright test',
     env: { PLAYWRIGHT_JSON_OUTPUT_NAME: e2eJson },
     detail: () => e2eDetail(readJson(e2eJson)?.stats),
   },
 ];
 
-const rows = selectGates(gates, values.only, values.skip).map((gate) => {
+/** @type {typeof gates} */
+let selected = [];
+
+try {
+  selected = selectGates(gates, values.only, values.skip);
+} catch (cause) {
+  console.error(`check-report: ${cause instanceof Error ? cause.message : String(cause)}`);
+  process.exit(2);
+}
+
+const rows = selected.map((gate) => {
   console.log(`\n▶ ${gate.name}: ${gate.command}`);
   const started = Date.now();
 

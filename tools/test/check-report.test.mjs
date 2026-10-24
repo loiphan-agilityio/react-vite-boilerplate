@@ -42,6 +42,14 @@ describe('check-report', () => {
     assert.deepEqual(ids(undefined, 'e2e'), ['lint', 'unit', 'build']);
   });
 
+  it('refuses a gate name that is not one, and a selection that leaves none', () => {
+    const gates = ['lint', 'e2e'].map((id) => ({ id }));
+
+    assert.throws(() => selectGates(gates, 'lnt', undefined), /no gate named lnt/);
+    assert.throws(() => selectGates(gates, undefined, 'e3e'), /no gate named e3e/);
+    assert.throws(() => selectGates(gates, 'e2e', 'e2e'), /leave no gate/);
+  });
+
   it('writes FAIL once, then the measured result when the gate has one', () => {
     const gate = { id: 'unit', name: 'Unit tests' };
 
