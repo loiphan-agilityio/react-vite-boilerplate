@@ -30,6 +30,7 @@ export const LoginPage = () => {
     control,
     handleSubmit,
     setError,
+    getValues,
     formState: { errors },
   } = useForm({ resolver, defaultValues: { email: '', password: '' } });
 
@@ -42,7 +43,7 @@ export const LoginPage = () => {
         if (error._tag === 'UnauthorizedError') {
           setError('root.server', { type: 'server', message: 'Wrong email or password.' });
         } else {
-          setFormErrors(setError, error);
+          setFormErrors(setError, error, getValues());
         }
       },
     });
