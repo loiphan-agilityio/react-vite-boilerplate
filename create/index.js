@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { constants, existsSync } from 'node:fs';
+import { constants, existsSync, statSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -39,8 +39,11 @@ const copyWorkingTree = (from, dest) => {
   return copyFiles(
     from,
     dest,
-    // An untracked nested repository (a clone, a git worktree) is listed as `dir/`: skip it.
-    files.filter((file) => file && !file.endsWith('/') && existsSync(join(from, file))),
+    // Files only: an untracked nested repository (a clone, a git worktree) is listed as `dir/`, a
+    // tracked one (a gitlink, a submodule) as `dir`, and a deleted file is listed but missing.
+    files.filter(
+      (file) => file && statSync(join(from, file), { throwIfNoEntry: false })?.isFile() === true,
+    ),
   );
 };
 

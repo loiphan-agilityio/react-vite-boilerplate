@@ -95,6 +95,27 @@ describe('create-react-vite-turbo', () => {
     assert.ok(!existsSync(join(out, 'nested')));
   });
 
+  it('copies a working tree that tracks a nested repository (a gitlink, a submodule)', async () => {
+    const source = join(tmp, 'with-gitlink');
+    const nested = join(source, 'nested');
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(source, 'CLAUDE.md'), '# x\n');
+    execFileSync('git', ['init', '-q', source]);
+    execFileSync('git', ['init', '-q', nested]);
+    await writeFile(join(nested, 'b.txt'), 'b\n');
+    const commit = ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'b'];
+    execFileSync('git', ['-C', nested, 'add', 'b.txt']);
+    execFileSync('git', ['-C', nested, ...commit]);
+    // `git add` of a folder that is a repository records a gitlink: ls-files lists `nested`.
+    execFileSync('git', ['-C', source, 'add', 'CLAUDE.md', 'nested']);
+
+    const out = join(tmp, 'from-gitlink');
+    const { status, stderr } = run(out, '--from', source, '--no-auth');
+    assert.equal(status, 0, stderr);
+    assert.equal(read(out, 'CLAUDE.md'), '# x\n');
+    assert.ok(!existsSync(join(out, 'nested')));
+  });
+
   it('stops on a patch that does not match exactly once, and removes the output', async () => {
     const source = join(tmp, 'source');
     await mkdir(join(source, 'create/templates/auth/files'), { recursive: true });
