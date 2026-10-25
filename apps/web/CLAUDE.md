@@ -181,8 +181,9 @@ ApiClient → effect/http`
   `test`, `chore`...). The `commit-msg` hook rejects anything else (commitlint).
 - The `pre-commit` hook runs ESLint and Prettier on the staged files (lint-staged), then
   `pnpm typecheck`. Fix what it reports; never commit with `--no-verify`.
-- The hooks are installed by `pnpm install` inside a git repository (husky, the root `prepare` script).
-  After a `git init`, run `pnpm install` once more to turn them on.
+- The hooks are installed by husky, the root `prepare` script, which `pnpm install` runs inside a git
+  repository. After a `git init` in a project already installed, run `pnpm run prepare` to turn them
+  on: `pnpm install` finds nothing to do and skips it.
 - `.gitattributes` keeps every file LF, so a checkout with `core.autocrlf=true` still passes Prettier.
 
 ## Library versions newer than most training data
