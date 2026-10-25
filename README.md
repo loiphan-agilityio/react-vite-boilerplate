@@ -10,6 +10,7 @@ A pnpm + Turborepo monorepo: a React 19 + Vite single-page app in `apps/web`, sh
 pnpm install
 pnpm dev:mock   # the API is answered by MSW mocks: no backend needed
 pnpm dev        # needs a real backend at VITE_API_URL (copy apps/web/.env.example to apps/web/.env.local)
+pnpm storybook  # every component and state, on http://localhost:6006
 ```
 
 ## Check
