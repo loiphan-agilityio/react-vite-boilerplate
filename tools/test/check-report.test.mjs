@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { after, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   e2eDetail,
@@ -72,5 +77,35 @@ describe('check-report', () => {
     assert.match(markdown, /\| Unit tests \| FAIL \| FAIL: no results \| 4s \|/);
     assert.match(markdown, /1 of 2 gates failed: Unit tests\./);
     assert.match(toMarkdown(rows.slice(0, 1)), /All 1 gates pass\./);
+  });
+});
+
+describe('check-report.mjs', () => {
+  const script = fileURLToPath(new URL('../check-report.mjs', import.meta.url));
+  const dir = mkdtempSync(join(tmpdir(), 'check-report-test-'));
+
+  after(() => rmSync(dir, { recursive: true, force: true }));
+
+  /**
+   * Runs the script in an empty folder, with a temp folder of its own: returns its exit code and
+   * the check-report folders it left there.
+   */
+  const run = (/** @type {string[]} */ args) => {
+    const temp = mkdtempSync(join(dir, 'tmp-'));
+    const cwd = mkdtempSync(join(dir, 'cwd-'));
+
+    const { status } = spawnSync(process.execPath, [script, ...args], {
+      cwd,
+      env: { ...process.env, TMPDIR: temp, TEMP: temp, TMP: temp },
+      stdio: 'ignore',
+    });
+
+    return { status, left: readdirSync(temp).filter((name) => name.startsWith('check-report-')) };
+  };
+
+  it('removes its temp folder after a run, and when it refuses a gate name', () => {
+    // `pnpm lint` fails at once in an empty folder: a full run with one failing gate.
+    assert.deepEqual(run(['--only', 'lint']), { status: 1, left: [] });
+    assert.deepEqual(run(['--only', 'lnt']), { status: 2, left: [] });
   });
 });

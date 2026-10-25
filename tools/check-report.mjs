@@ -10,7 +10,14 @@
 // Exits 1 when a gate fails, 2 for a gate name that is not one. What the results mean lives in
 // tools/lib/check-report.mjs (tested).
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -21,7 +28,11 @@ const { values } = parseArgs({
   options: { only: { type: 'string' }, skip: { type: 'string' } },
 });
 
+// The gates' JSON reports, read into the checklist; the folder goes when the script exits.
 const out = mkdtempSync(join(tmpdir(), 'check-report-'));
+
+process.on('exit', () => rmSync(out, { recursive: true, force: true }));
+
 const vitestJson = join(out, 'vitest.json');
 
 // Coverage stays where `pnpm test` writes it (CI uploads apps/web/coverage/), with a summary added.
