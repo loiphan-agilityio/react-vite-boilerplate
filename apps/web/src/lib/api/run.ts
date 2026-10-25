@@ -7,8 +7,9 @@ import type { ApiError } from './errors';
 /**
  * Runs an effect and returns a Promise for TanStack Query (`queryFn`, `mutationFn`).
  *
- * - Rejects with the effect's own typed error (an `ApiError` instance), so `query.error` can
- *   be switched on by `_tag` instead of being a squashed, untyped value.
+ * - Rejects with the effect's own typed error (an `ApiError` instance), so code branches on
+ *   `query.error` with the error classes (`instanceof`) or `Match` instead of a squashed, untyped
+ *   value.
  * - Pass the query's `signal`: when TanStack Query cancels, the fiber is interrupted and the
  *   in-flight fetch is aborted.
  */
