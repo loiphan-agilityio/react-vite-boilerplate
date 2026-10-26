@@ -61,7 +61,7 @@ const questions = [
   {
     question: 'Where does it deploy?',
     answer:
-      'CI builds it, runs the end-to-end tests and Lighthouse on a Netlify preview, then publishes main.',
+      'CI builds it, runs the end-to-end tests and Lighthouse on a Cloudflare Pages preview, then publishes main.',
   },
   {
     question: 'Can it grow into an app?',

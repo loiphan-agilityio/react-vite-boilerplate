@@ -23,9 +23,9 @@ describe('HomePage (landing)', () => {
     const { user } = renderRoute('/');
     const question = await screen.findByText('Where does it deploy?');
 
-    expect(screen.getByText(/Lighthouse on a Netlify preview/)).not.toBeVisible();
+    expect(screen.getByText(/Lighthouse on a Cloudflare Pages preview/)).not.toBeVisible();
     await user.click(question);
-    expect(screen.getByText(/Lighthouse on a Netlify preview/)).toBeVisible();
+    expect(screen.getByText(/Lighthouse on a Cloudflare Pages preview/)).toBeVisible();
   });
 
   it('shows the not-found page for an unknown URL', async () => {

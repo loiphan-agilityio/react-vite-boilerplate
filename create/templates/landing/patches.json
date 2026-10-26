@@ -20,11 +20,6 @@
     "replace": "// A landing page has no API to mock: e2e tests the production build.\n        command: `pnpm build --outDir dist-e2e && pnpm preview --outDir dist-e2e --port ${port} --strictPort`,"
   },
   {
-    "file": "apps/web/netlify.toml",
-    "find": "  # The mocked API: a new app has no backend yet. Once it has one, set VITE_API_URL and switch to\n  # `pnpm build` (here and in CI).\n  command = \"pnpm build:mock\"",
-    "replace": "  # A landing page has no API to mock.\n  command = \"pnpm build\""
-  },
-  {
     "file": "apps/web/e2e/home.spec.ts",
     "find": "name: /solid foundation/",
     "replace": "name: /people understand/"
@@ -90,9 +85,9 @@
     "replace": "  await expect(page.getByText('Page not found')).toBeVisible();\n});\n"
   },
   {
-    "file": "apps/web/netlify.toml",
-    "find": "  [headers.values]\n    Content-Type = \"application/manifest+json\"\n\n# The MSW worker keeps its name across releases: always revalidate it.\n[[headers]]\n  for = \"/mockServiceWorker.js\"\n  [headers.values]\n    Cache-Control = \"no-cache\"\n",
-    "replace": "  [headers.values]\n    Content-Type = \"application/manifest+json\"\n"
+    "file": "apps/web/public/_headers",
+    "find": "\n# The MSW worker keeps its name across releases: always revalidate it.\n/mockServiceWorker.js\n  Cache-Control: no-cache\n",
+    "replace": ""
   },
   {
     "file": "apps/web/package.json",
@@ -236,7 +231,7 @@
   },
   {
     "file": "CLAUDE.md",
-    "find": " Once the app has a\nbackend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/web/dist/` from\nthere as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to\n`build` in `apps/web/netlify.toml`.",
+    "find": " Once the app has a\nbackend, set `VITE_API_URL` on the `pnpm build` step of **check**, and upload `apps/web/dist/`\nfrom there as the `app` artifact instead of the one **e2e** uploads.",
     "replace": ""
   },
   {
@@ -256,8 +251,8 @@
   },
   {
     "file": "apps/web/CLAUDE.md",
-    "find": "Single-page app: React 19, Vite 8, TypeScript 6 (strict), Effect 4, TanStack Query 5,\nReact Hook Form 7, shadcn/ui on Tailwind CSS 4, React Router 8. Tests: Vitest 5, React Testing\nLibrary, MSW 3; end-to-end: Playwright. Deployed to Netlify (`netlify.toml`) by the monorepo's\nCI/CD (`../../CLAUDE.md`).",
-    "replace": "Landing page: one public marketing page on React 19, Vite 8, TypeScript 6 (strict), shadcn/ui\non Tailwind CSS 4 and React Router 8. Tests: Vitest 5, React Testing Library; end-to-end:\nPlaywright with axe. It calls no API: there is no API layer and no mocks. Deployed to Netlify\n(`netlify.toml`) by the monorepo's CI/CD (`../../CLAUDE.md`)."
+    "find": "Single-page app: React 19, Vite 8, TypeScript 6 (strict), Effect 4, TanStack Query 5,\nReact Hook Form 7, shadcn/ui on Tailwind CSS 4, React Router 8. Tests: Vitest 5, React Testing\nLibrary, MSW 3; end-to-end: Playwright. Deployed to Cloudflare Pages (`public/_headers`) by the\nmonorepo's CI/CD (`../../CLAUDE.md`).",
+    "replace": "Landing page: one public marketing page on React 19, Vite 8, TypeScript 6 (strict), shadcn/ui\non Tailwind CSS 4 and React Router 8. Tests: Vitest 5, React Testing Library; end-to-end:\nPlaywright with axe. It calls no API: there is no API layer and no mocks. Deployed to\nCloudflare Pages (`public/_headers`) by the monorepo's CI/CD (`../../CLAUDE.md`)."
   },
   {
     "file": "apps/web/CLAUDE.md",
@@ -301,8 +296,8 @@
   },
   {
     "file": "apps/web/CLAUDE.md",
-    "find": "## End-to-end tests\n\n- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user\n  takes through the real app (open it from the header, read the list, submit the form, see the\n  result). Edge cases, error states and 422s stay in the unit tests.\n- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with\n  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on\n  data a backend would hold.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes\n  localhost or a port.\n\n",
-    "replace": "## End-to-end tests\n\n- Playwright specs live in `e2e/`: `home.spec.ts` walks the page as a visitor does (icons,\n  manifest, the Content-Security-Policy, the not-found page) and `accessibility.spec.ts`\n  runs axe for WCAG A and AA. A new section or page adds its flow to them.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes\n  localhost or a port.\n\n"
+    "find": "## End-to-end tests\n\n- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user\n  takes through the real app (open it from the header, read the list, submit the form, see the\n  result). Edge cases, error states and 422s stay in the unit tests.\n- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with\n  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on\n  data a backend would hold.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec\n  never assumes localhost or a port.\n\n",
+    "replace": "## End-to-end tests\n\n- Playwright specs live in `e2e/`: `home.spec.ts` walks the page as a visitor does (icons,\n  manifest, the Content-Security-Policy, the not-found page) and `accessibility.spec.ts`\n  runs axe for WCAG A and AA. A new section or page adds its flow to them.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec\n  never assumes localhost or a port.\n\n"
   },
   {
     "file": "apps/web/CLAUDE.md",

@@ -18,6 +18,6 @@ pnpm dev        # needs a real backend at VITE_API_URL (copy apps/web/.env.examp
 tests (`pnpm test:e2e:install` downloads Chromium once per machine). Run it before committing;
 `pnpm check:report` runs the same gates and prints a checklist with the unit and e2e pass rates
 and coverage. `pnpm lighthouse <url>` scores a deployed or previewed page (CI does it on every
-Netlify draft). While coding, `pnpm test:watch` re-runs the affected tests on every save.
-CI/CD (`.github/workflows/ci.yml`, deployed to Netlify) is described in [CLAUDE.md](CLAUDE.md),
+preview deploy). While coding, `pnpm test:watch` re-runs the affected tests on every save.
+CI/CD (`.github/workflows/ci.yml`, deployed to Cloudflare Pages) is described in [CLAUDE.md](CLAUDE.md),
 with what to change before real users (a backend instead of the mocks, among others).

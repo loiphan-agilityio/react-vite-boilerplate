@@ -49,7 +49,7 @@ describe('create-react-vite-turbo', () => {
     assert.match(read(landing, 'apps/web/public/robots.txt'), /Sitemap: /);
     assert.ok(existsSync(join(landing, 'apps/web/public/sitemap.xml')));
     assert.match(read(landing, 'apps/web/index.html'), /og:description/);
-    assert.match(read(landing, 'apps/web/netlify.toml'), /command = "pnpm build"/);
+    assert.doesNotMatch(read(landing, 'apps/web/public/_headers'), /mockServiceWorker/);
     assert.match(read(landing, 'apps/web/playwright.config.ts'), /pnpm build --outDir dist-e2e/);
 
     for (const gone of [

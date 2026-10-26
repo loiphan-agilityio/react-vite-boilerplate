@@ -40,7 +40,7 @@
             "integration_id": 15368
           },
           {
-            "context": "Deploy: Netlify draft",
+            "context": "Deploy: preview",
             "integration_id": 15368
           },
           {
@@ -48,7 +48,7 @@
             "integration_id": 15368
           },
           {
-            "context": "Lighthouse: Netlify draft",
+            "context": "Lighthouse: deployed preview",
             "integration_id": 15368
           }
         ]

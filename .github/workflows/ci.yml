@@ -4,27 +4,28 @@
 # - check: lint, typecheck, unit tests with coverage, build and Storybook build (and, in the
 #   boilerplate itself, the project generator's tests).
 # - e2e: the Playwright tests against the app built on the mocked API (`pnpm build:mock`).
-# - deploy-draft: once both pass, the app and Storybook they built go to Netlify as a draft:
-#   `pr-<number>--<site>` on a pull request, a unique draft URL on a push to main.
-# - e2e-deployed: the same Playwright tests against that deploy URL: it checks what Netlify serves
-#   (netlify.toml), and has no report of its own (its result is the job's log and annotations).
+# - deploy-draft: once both pass, the app and Storybook they built go to Cloudflare Pages as a
+#   preview: `pr-<number>.<project>.pages.dev` on a pull request, `main-draft` on a push to main.
+# - e2e-deployed: the same Playwright tests against that deploy URL: it checks what Pages serves
+#   (apps/web/public/_headers), and has no report of its own (its result is the job's log).
 #   The e2e job publishes an Allure 3 report on Cloudflare Pages (CLOUDFLARE_PAGES_PROJECT), or
 #   uploads it as an artifact when it cannot go there (a single index.html: download, unzip, open).
 # - lighthouse: Lighthouse (mobile) on that deploy URL; accessibility under 100 or SEO under 95
 #   fails it, performance and best practices only warn (tools/lighthouse.mjs).
 # - deploy-production (push to main only): once both pass, the same files go live.
 #
-# Deploys need the NETLIFY_AUTH_TOKEN secret and the NETLIFY_SITE_ID variable (Settings > Secrets
-# and variables > Actions); NETLIFY_STORYBOOK_SITE_ID adds a second site for Storybook. Without
-# NETLIFY_SITE_ID the deploy jobs are skipped, and so are pull requests from forks and Dependabot's,
-# which get no Actions secrets: their checks and mock-build e2e still run, and main deploys after
-# the merge.
+# Every deploy goes to Cloudflare Pages and needs the CLOUDFLARE_API_TOKEN secret (permission:
+# Account > Cloudflare Pages > Edit) and the CLOUDFLARE_ACCOUNT_ID variable (Settings > Secrets and
+# variables > Actions). Each site is a Pages project of its own, created once with
+# `npx wrangler pages project create <name> --production-branch main` and named by a variable:
 #
-# The Allure report deploy needs the CLOUDFLARE_API_TOKEN secret (permission: Account > Cloudflare
-# Pages > Edit) and the CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_PAGES_PROJECT variables. Create the
-# project once: `npx wrangler pages project create <name> --production-branch main`. Without
-# CLOUDFLARE_PAGES_PROJECT, or on a fork's or Dependabot's pull request, it is an artifact instead.
-# The check job's coverage report does the same on a second project, CLOUDFLARE_PAGES_UT_PROJECT.
+# - CLOUDFLARE_PAGES_APP_PROJECT: the app. Without it the deploy jobs are skipped, and so are pull
+#   requests from forks and Dependabot's, which get no Actions secrets: their checks and mock-build
+#   e2e still run, and main deploys after the merge.
+# - CLOUDFLARE_PAGES_STORYBOOK_PROJECT (optional): Storybook, deployed alongside the app.
+# - CLOUDFLARE_PAGES_PROJECT: the Allure report. Without it, or on a fork's or Dependabot's pull
+#   request, it is an artifact instead. CLOUDFLARE_PAGES_UT_PROJECT does the same for the check
+#   job's coverage report.
 name: CI
 
 on:
@@ -47,7 +48,6 @@ defaults:
     shell: bash
 
 env:
-  NETLIFY_CLI: netlify-cli@27.14.1
   WRANGLER: wrangler@4.149.0
 
 jobs:
@@ -79,7 +79,7 @@ jobs:
         run: node --test create/index.test.js
       # The deploy jobs publish this Storybook build instead of building it again.
       - uses: actions/upload-artifact@v7
-        if: ${{ vars.NETLIFY_STORYBOOK_SITE_ID != '' }}
+        if: ${{ vars.CLOUDFLARE_PAGES_STORYBOOK_PROJECT != '' }}
         with:
           name: storybook
           path: apps/web/storybook-static/
@@ -152,7 +152,7 @@ jobs:
       # The deploy jobs publish the build these tests passed on. Once the app has a backend, upload
       # apps/web/dist/ from check's `pnpm build` (with VITE_API_URL) as `app` instead.
       - uses: actions/upload-artifact@v7
-        if: ${{ vars.NETLIFY_SITE_ID != '' }}
+        if: ${{ vars.CLOUDFLARE_PAGES_APP_PROJECT != '' }}
         with:
           name: app
           path: apps/web/dist-e2e/
@@ -212,10 +212,10 @@ jobs:
           retention-days: 14
 
   deploy-draft:
-    name: 'Deploy: Netlify draft'
+    name: 'Deploy: preview'
     needs: [check, e2e]
     if: >-
-      vars.NETLIFY_SITE_ID != '' &&
+      vars.CLOUDFLARE_PAGES_APP_PROJECT != '' &&
       github.actor != 'dependabot[bot]' &&
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.full_name == github.repository)
@@ -226,58 +226,67 @@ jobs:
     outputs:
       url: ${{ steps.app.outputs.url }}
     env:
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
-      NETLIFY_STORYBOOK_SITE_ID: ${{ vars.NETLIFY_STORYBOOK_SITE_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      APP_PROJECT: ${{ vars.CLOUDFLARE_PAGES_APP_PROJECT }}
+      STORYBOOK_PROJECT: ${{ vars.CLOUDFLARE_PAGES_STORYBOOK_PROJECT }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
+      # On a pull request github.sha is the merge commit; the checks list shows the head commit.
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
-      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: app
           path: apps/web/dist/
       - uses: actions/download-artifact@v8
-        if: ${{ env.NETLIFY_STORYBOOK_SITE_ID != '' }}
+        if: ${{ env.STORYBOOK_PROJECT != '' }}
         with:
           name: storybook
           path: apps/web/storybook-static/
-      # A draft must stay out of search results: Netlify adds a `_headers` file's rules to
-      # netlify.toml's, and only this job's copy of the build gets one (production downloads the
-      # artifact again, without it).
-      - name: Keep the drafts out of search engines
+      # A preview must stay out of search results: Pages adds these rules to the build's own
+      # _headers, and only this job's copy of the build gets them (production downloads the
+      # artifact again, without them).
+      - name: Keep the previews out of search engines
         run: |
           for dir in apps/web/dist apps/web/storybook-static; do
-            if [[ -d "$dir" ]]; then printf '/*\n  X-Robots-Tag: noindex\n' >> "$dir/_headers"; fi
+            if [[ -d "$dir" ]]; then printf '\n/*\n  X-Robots-Tag: noindex\n' >> "$dir/_headers"; fi
           done
-      - name: Deploy the app (draft)
+      # Any branch but the project's production branch (main) is a preview: pr-<number> on a pull
+      # request, main-draft on a push to main, until deploy-production publishes it.
+      - name: Deploy the app (preview)
         id: app
         env:
           GH_TOKEN: ${{ github.token }}
-          # On a pull request github.sha is the merge commit; the checks list shows the head commit.
-          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        # Netlify's monorepo mode, from the root: --filter picks the web app, --dir is resolved
-        # against the root, and apps/web/netlify.toml (redirects, headers) applies.
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-app.ndjson
         run: |
-          alias=()
-          if [[ -n "$PR_NUMBER" ]]; then alias=(--alias "pr-$PR_NUMBER"); fi
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web --dir apps/web/dist \
-            --site "$NETLIFY_SITE_ID" "${alias[@]}" --message "$GITHUB_SHA" --json |
-            jq -r .deploy_url)"
-          [[ "$url" == https://* ]]
+          branch="${PR_NUMBER:+pr-$PR_NUMBER}"
+          branch="${branch:-$GITHUB_REF_NAME-draft}"
+          npx -y "$WRANGLER" pages deploy apps/web/dist --project-name "$APP_PROJECT" \
+            --branch "$branch" --commit-hash "$SHA"
+          # The tests get this deploy's own URL, which a later push cannot move; the commit status
+          # gets the branch alias, which stays the same from run to run.
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
+          alias="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
+          [[ "$url" == https://* && "$alias" == https://* ]]
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "App: $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "App: $alias" >> "$GITHUB_STEP_SUMMARY"
           # A commit status whose Details link in the checks list opens the deploy.
           gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
-            -f context='Preview - Webapp Deployment' -f target_url="$url" \
-            -f description='Draft deploy'
-      - name: Deploy Storybook (draft)
-        if: ${{ env.NETLIFY_STORYBOOK_SITE_ID != '' }}
+            -f context='Preview - Webapp Deployment' -f target_url="$alias" \
+            -f description='Preview deploy'
+      - name: Deploy Storybook (preview)
+        if: ${{ env.STORYBOOK_PROJECT != '' }}
+        env:
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-storybook.ndjson
         run: |
-          alias=()
-          if [[ -n "$PR_NUMBER" ]]; then alias=(--alias "pr-$PR_NUMBER"); fi
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web \
-            --dir apps/web/storybook-static --site "$NETLIFY_STORYBOOK_SITE_ID" "${alias[@]}" \
-            --message "$GITHUB_SHA" --json | jq -r .deploy_url)"
+          branch="${PR_NUMBER:+pr-$PR_NUMBER}"
+          branch="${branch:-$GITHUB_REF_NAME-draft}"
+          npx -y "$WRANGLER" pages deploy apps/web/storybook-static \
+            --project-name "$STORYBOOK_PROJECT" --branch "$branch" --commit-hash "$SHA"
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
           [[ "$url" == https://* ]]
           echo "Storybook: $url" >> "$GITHUB_STEP_SUMMARY"
 
@@ -302,7 +311,7 @@ jobs:
           E2E_BASE_URL: ${{ needs.deploy-draft.outputs.url }}
 
   lighthouse:
-    name: 'Lighthouse: Netlify draft'
+    name: 'Lighthouse: deployed preview'
     needs: deploy-draft
     runs-on: ubuntu-latest
     steps:
@@ -323,7 +332,7 @@ jobs:
           retention-days: 14
 
   deploy-production:
-    name: 'Deploy: Netlify production'
+    name: 'Deploy: production'
     needs: [e2e-deployed, lighthouse]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -333,35 +342,45 @@ jobs:
       contents: read
       statuses: write
     env:
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
-      NETLIFY_STORYBOOK_SITE_ID: ${{ vars.NETLIFY_STORYBOOK_SITE_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      APP_PROJECT: ${{ vars.CLOUDFLARE_PAGES_APP_PROJECT }}
+      STORYBOOK_PROJECT: ${{ vars.CLOUDFLARE_PAGES_STORYBOOK_PROJECT }}
     steps:
-      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: app
           path: apps/web/dist/
       - uses: actions/download-artifact@v8
-        if: ${{ env.NETLIFY_STORYBOOK_SITE_ID != '' }}
+        if: ${{ env.STORYBOOK_PROJECT != '' }}
         with:
           name: storybook
           path: apps/web/storybook-static/
+      # A deploy to the production branch (main) goes live. Pages uploads only the files the
+      # preview did not already, so this is quick.
       - name: Publish the app
         env:
           GH_TOKEN: ${{ github.token }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-app.ndjson
         run: |
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web --dir apps/web/dist \
-            --site "$NETLIFY_SITE_ID" --prod --message "$GITHUB_SHA" --json | jq -r .url)"
+          npx -y "$WRANGLER" pages deploy apps/web/dist --project-name "$APP_PROJECT" \
+            --branch main --commit-hash "$GITHUB_SHA"
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
+          [[ "$url" == https://* ]]
           echo "App: $url" >> "$GITHUB_STEP_SUMMARY"
           # A commit status whose Details link in the checks list opens the live site.
           gh api "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" -f state=success \
             -f context='Prod - Webapp Deployment' -f target_url="$url" \
             -f description='Live site'
       - name: Publish Storybook
-        if: ${{ env.NETLIFY_STORYBOOK_SITE_ID != '' }}
+        if: ${{ env.STORYBOOK_PROJECT != '' }}
+        env:
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-storybook.ndjson
         run: |
-          url="$(npx -y "$NETLIFY_CLI" deploy --no-build --filter web \
-            --dir apps/web/storybook-static --site "$NETLIFY_STORYBOOK_SITE_ID" --prod \
-            --message "$GITHUB_SHA" --json | jq -r .url)"
+          npx -y "$WRANGLER" pages deploy apps/web/storybook-static \
+            --project-name "$STORYBOOK_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
+          [[ "$url" == https://* ]]
           echo "Storybook: $url" >> "$GITHUB_STEP_SUMMARY"
