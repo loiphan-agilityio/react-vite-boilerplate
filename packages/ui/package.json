@@ -12,7 +12,9 @@
   "scripts": {
     "lint": "oxlint -c ../../oxlint.config.ts --type-aware --deny-warnings . && prettier --check .",
     "lint:fix": "oxlint -c ../../oxlint.config.ts --type-aware --fix . && prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6007",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
@@ -30,13 +32,19 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@repo/storybook-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@storybook/addon-a11y": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "shadcn": "catalog:",
-    "typescript": "catalog:"
+    "storybook": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

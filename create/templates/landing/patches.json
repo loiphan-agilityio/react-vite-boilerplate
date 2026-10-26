@@ -71,8 +71,8 @@
   },
   {
     "file": "apps/web/.storybook/main.ts",
-    "find": "  addons: ['@storybook/addon-a11y'],\n  framework: '@storybook/react-vite',\n  // Serves public/mockServiceWorker.js, which the MSW worker in preview.tsx registers.\n  staticDirs: ['../public'],\n};\n",
-    "replace": "  addons: ['@storybook/addon-a11y'],\n  framework: '@storybook/react-vite',\n  // Serves public/ (icons, the web manifest) to the stories, as the app does.\n  staticDirs: ['../public'],\n};\n"
+    "find": "  // Serves public/mockServiceWorker.js, which the MSW worker in preview.tsx registers.\n  staticDirs: ['../public'],\n};\n",
+    "replace": "  // Serves public/ (icons, the web manifest) to the stories, as the app does.\n  staticDirs: ['../public'],\n};\n"
   },
   {
     "file": "apps/web/.storybook/preview.tsx",
@@ -111,8 +111,8 @@
   },
   {
     "file": "apps/web/package.json",
-    "find": "    \"vite\": \"^8.3.5\",\n    \"vitest\": \"^5.0.5\"\n  },\n  \"msw\": {\n    \"workerDirectory\": [\n      \"public\"\n    ]\n  }\n}\n",
-    "replace": "    \"vite\": \"^8.3.5\",\n    \"vitest\": \"^5.0.5\"\n  }\n}\n"
+    "find": "    \"vite\": \"catalog:\",\n    \"vitest\": \"^5.0.5\"\n  },\n  \"msw\": {\n    \"workerDirectory\": [\n      \"public\"\n    ]\n  }\n}\n",
+    "replace": "    \"vite\": \"catalog:\",\n    \"vitest\": \"^5.0.5\"\n  }\n}\n"
   },
   {
     "file": "apps/web/src/app/providers.tsx",

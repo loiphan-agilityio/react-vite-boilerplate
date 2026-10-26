@@ -6,6 +6,9 @@ packages:
 # in every package.json. React and sonner must exist exactly once: sonner's toast store is
 # module-level, so toast() called in an app and <Toaster> from @repo/ui must share one instance.
 catalog:
+  '@storybook/addon-a11y': ^10.6.3
+  '@storybook/react-vite': ^10.6.3
+  '@tailwindcss/vite': ^4.3.3
   '@types/node': ^26.6.5
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
@@ -15,8 +18,10 @@ catalog:
   react-dom: ^19.3.1
   shadcn: ^4.22.1
   sonner: ^2.0.8
+  storybook: ^10.6.3
   tailwindcss: ^4.3.3
   typescript: ~6.0.3
+  vite: ^8.3.5
 # Storybook's builder needs esbuild's install script (pnpm 11 blocks unreviewed build scripts).
 allowBuilds:
   esbuild: true

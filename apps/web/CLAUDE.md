@@ -174,6 +174,8 @@ ApiClient → effect/http`
 - Every component has a `<Name>.stories.tsx` in its folder (`components/ItemForm/index.tsx` →
   `components/ItemForm/ItemForm.stories.tsx`), with one story per state it renders, driven by the feature's
   `mocks.ts` through `parameters.msw.handlers`.
+- The UI kit's stories live in `packages/ui/src/stories/` (its own Storybook: `pnpm --filter @repo/ui
+  storybook`); this app's Storybook includes them too, so the deployed one shows the kit.
 - The preview (`.storybook/preview.tsx`) wraps every story in the same providers as a test and
   starts the app's MSW worker: add no providers in a story.
 
