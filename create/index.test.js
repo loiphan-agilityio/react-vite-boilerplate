@@ -37,7 +37,7 @@ describe('create-react-vite-turbo', () => {
   });
   after(() => rm(tmp, { recursive: true, force: true }));
 
-  it('with --landing, replaces the home page with a landing page built without mocks', () => {
+  it('with --landing, replaces the home page with a landing page with no API layer or mocks', () => {
     const landing = join(tmp, 'landing');
     const { status, stderr, stdout } = run(landing, '--from', repo, '--landing');
 
@@ -51,6 +51,23 @@ describe('create-react-vite-turbo', () => {
     assert.match(read(landing, 'apps/web/index.html'), /og:description/);
     assert.match(read(landing, 'apps/web/netlify.toml'), /command = "pnpm build"/);
     assert.match(read(landing, 'apps/web/playwright.config.ts'), /pnpm build --outDir dist-e2e/);
+
+    for (const gone of [
+      'src/lib/api',
+      'src/mocks',
+      'src/lib/query-client.ts',
+      'src/lib/forms.ts',
+    ]) {
+      assert.ok(!existsSync(join(landing, 'apps/web', gone)), gone);
+    }
+
+    const pkg = JSON.parse(read(landing, 'apps/web/package.json'));
+
+    for (const name of ['effect', '@tanstack/react-query', 'react-hook-form', 'msw']) {
+      assert.equal(pkg.dependencies[name] ?? pkg.devDependencies[name], undefined, name);
+    }
+
+    assert.equal(pkg.scripts['build:mock'], undefined);
   });
 
   it('refuses a landing page with authentication', () => {

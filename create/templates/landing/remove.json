@@ -1,5 +1,18 @@
 [
   "apps/web/src/app/home-page.tsx",
   "apps/web/src/app/__tests__/home-page.test.tsx",
-  "apps/web/src/assets/tech"
+  "apps/web/src/assets/tech",
+  "apps/web/src/lib/api",
+  "apps/web/src/mocks",
+  "apps/web/.env.example",
+  "apps/web/.env.mock",
+  "apps/web/src/lib/__tests__/config.test.ts",
+  "apps/web/src/lib/__tests__/forms.test.ts",
+  "apps/web/src/lib/__tests__/query-client.test.ts",
+  "apps/web/src/lib/config.ts",
+  "apps/web/src/lib/forms.ts",
+  "apps/web/src/lib/query-client.ts",
+  "apps/web/src/lib/runtime.ts",
+  "apps/web/src/test/query-client.ts",
+  "apps/web/src/vite-env.d.ts"
 ]

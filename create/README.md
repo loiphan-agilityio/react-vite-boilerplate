@@ -19,7 +19,10 @@ With authentication, sign in as `demo@example.com` / `password`.
 - **Landing page:** the project with `apps/web/src/app/home-page.tsx` replaced by one public
   marketing page (hero, features, how it works, FAQ, a call to action), Open Graph and Twitter tags,
   `sitemap.xml` and a `Sitemap:` line in `robots.txt` (replace `www.example.com`), and a build
-  and e2e tests without mocks (`pnpm build`). `--landing --auth` is refused.
+  and e2e tests without mocks (`pnpm build`). A landing page calls no API, so it drops the API
+  layer (`src/lib/api`, config, forms, the query client), the MSW mocks and their dependencies
+  (Effect, TanStack Query, React Hook Form, MSW); `pnpm install` updates the lockfile.
+  `--landing --auth` is refused.
 
 The project is named after its folder (`my-app`: the root `package.json`, the README and
 `CLAUDE.md` headings, the page title); `--name <name>` names it otherwise, for a caller that
