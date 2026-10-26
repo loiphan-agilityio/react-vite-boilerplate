@@ -30,7 +30,7 @@ export const parseConfig = (raw: RawEnv) => {
   } as const;
 };
 
-export type Config = ReturnType<typeof parseConfig>;
+type Config = ReturnType<typeof parseConfig>;
 
 /**
  * The parsed values, for code outside Effect: `main.tsx` (start MSW or not) and MSW handlers
