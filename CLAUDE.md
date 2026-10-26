@@ -145,7 +145,7 @@ since the lockfile is at the root. `apps/web` must keep all of these.
    and Lighthouse passed.
 
 GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
-`Checks: lint, typecheck, unit, build`, `E2E: mock API (CI runner)`, `Deploy: Netlify draft`,
+`Checks: lint, typecheck, unit, build`, `E2E: Run testing on mock API`, `Deploy: Netlify draft`,
 `E2E: deployed preview`, `Lighthouse: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
 A required status check in branch protection matches that name, so after renaming a job, select
 it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
@@ -159,13 +159,13 @@ backend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/
 there as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to
 `build` in `apps/web/netlify.toml`.
 
-Both e2e jobs build an Allure 3 report (`apps/web/allurerc.ts`; its history carried in the Actions
-cache). With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus `CLOUDFLARE_ACCOUNT_ID` and the
-secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), they publish it on Cloudflare
-Pages, and upload it as an artifact only when it cannot go there (a fork's or Dependabot's pull
-request, or a failed deploy): `pr-<number>.<project>.pages.dev` (`-deployed` for the
-draft's run), `<project>.pages.dev` for `main`, linked from the commit statuses
-`E2E report: mock API` and `E2E report: deployed preview`. Create the project once:
+The **e2e** job builds an Allure 3 report (`apps/web/allurerc.ts`; its history carried in the
+Actions cache). With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus `CLOUDFLARE_ACCOUNT_ID` and
+the secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), it publishes it on Cloudflare
+Pages, and uploads it as an artifact only when it cannot go there (a fork's or Dependabot's pull
+request, or a failed deploy): `pr-<number>.<project>.pages.dev` on a pull request,
+`<project>.pages.dev` for `main`, linked from the commit status `E2E report`. **e2e-deployed** has
+no report: it checks what Netlify serves, and its result is the job's log. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
 ### Before real users
