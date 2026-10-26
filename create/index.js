@@ -120,7 +120,11 @@ const toPackageName = (name) =>
 const nameProject = async (dest, name) => {
   const renames = [
     ['package.json', /^ {2}"name": "boilerplate",$/m, `  "name": "${name}",`],
-    ['README.md', /^# boilerplate$/m, `# ${name}`],
+    [
+      'README.md',
+      /^<h1 align="center">boireact-vite-boilerplatelerplate<\/h1>$/m,
+      `<h1 align="center">${name}</h1>`,
+    ],
     ['CLAUDE.md', /^# boilerplate \(monorepo\)$/m, `# ${name} (monorepo)`],
     ['apps/web/index.html', /<title>Boilerplate<\/title>/, `<title>${name}</title>`],
     ['apps/web/public/site.webmanifest', /"name": "Boilerplate"/, `"name": "${name}"`],
@@ -177,10 +181,22 @@ const main = async () => {
     if (withAuth) await applyTemplate(dest, 'auth');
 
     await rm(join(dest, 'create'), { recursive: true, force: true });
-    const claude = join(dest, 'CLAUDE.md');
-    const text = await readFile(claude, 'utf8');
-    const stripped = text.replace(/<!-- template-only -->[\s\S]*?<!-- \/template-only -->\n*/g, '');
-    await writeFile(claude, `${stripped.trimEnd()}\n`);
+
+    for (const doc of ['CLAUDE.md', 'README.md']) {
+      const file = join(dest, doc);
+
+      if (!existsSync(file)) continue;
+
+      const text = await readFile(file, 'utf8');
+
+      const stripped = text.replace(
+        /<!-- template-only -->[\s\S]*?<!-- \/template-only -->\n*/g,
+        '',
+      );
+
+      await writeFile(file, `${stripped.trimEnd()}\n`);
+    }
+
     await nameProject(dest, name);
   } catch (error) {
     await rm(dest, { recursive: true, force: true });
