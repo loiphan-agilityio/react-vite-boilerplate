@@ -67,7 +67,7 @@ export default defineConfig([
     '**/dist-e2e/',
     '**/coverage/',
     '**/storybook-static/',
-    '**/playwright-report/',
+    '**/allure-report/',
     '**/test-results/',
     '**/blob-report/',
     '**/public/mockServiceWorker.js',

@@ -159,6 +159,14 @@ backend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/
 there as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to
 `build` in `apps/web/netlify.toml`.
 
+Both e2e jobs build an Allure 3 report (`apps/web/allurerc.ts`; its history carried in the Actions
+cache) and upload it as an artifact. With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus
+`CLOUDFLARE_ACCOUNT_ID` and the secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit),
+they also publish it on Cloudflare Pages: `pr-<number>.<project>.pages.dev` (`-deployed` for the
+draft's run), `<project>.pages.dev` for `main`, linked from the commit statuses
+`Allure report - mock build` and `Allure report - Netlify draft`. Create the project once:
+`npx wrangler pages project create <name> --production-branch main`.
+
 ### Before real users
 
 What ships is production-shaped (security headers and a Content-Security-Policy, hashed assets

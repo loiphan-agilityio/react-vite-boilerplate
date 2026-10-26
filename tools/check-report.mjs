@@ -63,7 +63,7 @@ const gates = [
     id: 'e2e',
     name: 'E2E (Playwright)',
     // The json reporter comes from playwright.config.ts when PLAYWRIGHT_JSON_OUTPUT_NAME is set: a
-    // --reporter here would drop the config's (CI's annotations, the html report CI uploads).
+    // --reporter here would drop the config's (CI's annotations, the Allure results).
     command: 'pnpm --filter web exec playwright test',
     env: { PLAYWRIGHT_JSON_OUTPUT_NAME: e2eJson },
     detail: () => e2eDetail(readJson(e2eJson)?.stats),

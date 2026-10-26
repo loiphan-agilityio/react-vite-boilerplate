@@ -3,7 +3,8 @@ dist/
 dist-e2e/
 coverage/
 storybook-static/
-playwright-report/
+allure-report/
+allure-history.jsonl
 test-results/
 blob-report/
 *storybook.log

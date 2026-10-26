@@ -16,7 +16,7 @@ commands below from `apps/web`; the root `pnpm check` runs every package through
 | `pnpm lint` | ESLint (`--max-warnings=0`, also enforces the import rules below) and `prettier --check`. `pnpm lint:fix` fixes what it can and formats; run it before `pnpm check`. |
 | `pnpm typecheck` | `tsc -b` |
 | `pnpm test` | Vitest once, with coverage (≥ 80% lines in `src/features` and `src/lib`). `pnpm test:watch` to watch. |
-| `pnpm test:e2e` | Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`; with `E2E_BASE_URL` set, tests that URL instead. `pnpm test:e2e:install` downloads Chromium once per machine. |
+| `pnpm test:e2e` | Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`; with `E2E_BASE_URL` set, tests that URL instead. `pnpm test:e2e:install` downloads Chromium once per machine. `pnpm test:e2e:report` builds the Allure 3 report of the last run (`allurerc.ts`, into `allure-report/`) and opens it. |
 | `pnpm build` | Typecheck + production build. `pnpm build:mock` builds with MSW on (`.env.mock`): what CI deploys while the app has no backend. A browser that blocks service workers still gets the app, unmocked, with a console warning. |
 | `pnpm storybook` | Storybook on port 6006 (stories render inside `.storybook/story-providers.tsx`, MSW on). |
 | `pnpm build-storybook` | Static Storybook build; fails when a story does not compile. |
@@ -58,6 +58,7 @@ src/
   test/             setup.ts, render.tsx (renderRoute, renderWithProviders)
 e2e/                Playwright specs: home.spec.ts, then <feature>.spec.ts per feature
 playwright.config.ts  the e2e runner: mock build + `vite preview`, or E2E_BASE_URL
+allurerc.ts         the Allure 3 report of the e2e run (results in test-results/allure)
 netlify.toml        Netlify: SPA redirect, cache headers, build command for git-based builds
 ```
 
