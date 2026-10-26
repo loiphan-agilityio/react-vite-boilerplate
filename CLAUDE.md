@@ -22,7 +22,7 @@ tsconfig.json           types for the root's own TypeScript (oxlint.config.ts), 
                         type-aware lint rules need
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
-.github/workflows/ci.yml  CI/CD: gates, e2e, Cloudflare Pages deploy of apps/web, e2e on it, production
+.github/workflows/ci.yml  CI/CD: gates, Cloudflare Pages deploy of apps/web, Lighthouse, production, then e2e on it
 .husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint),
                         pre-push (refuses main, dev, stag, prod and their long names)
 .claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
@@ -134,9 +134,9 @@ since the lockfile is at the root. `apps/web` must keep all of these.
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, from the root:
 
-1. **check** (lint, typecheck, unit tests with coverage, build, Storybook build) and **e2e**
-   (`pnpm test:e2e` on the mock build) in parallel.
-2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to
+1. **check** (lint, typecheck, unit tests with coverage, build, Storybook build, and the mock
+   build the deploys publish).
+2. **deploy-draft**: the mock build and the Storybook **check** built go to
    Cloudflare Pages as a preview (`pr-<number>.<project>.pages.dev` on a pull request, branch
    `main-draft` on a push to `main`), without building them again, with
    `wrangler pages deploy apps/web/dist`. `apps/web/public/_headers` (copied into both builds)
@@ -145,15 +145,16 @@ since the lockfile is at the root. `apps/web` must keep all of these.
    `404.html`: it turns that fallback off). Each preview also sends `X-Robots-Tag: noindex` (rules
    the job appends to its copy of `_headers`), so a leaked preview URL stays out of search
    results; production is deployed without it.
-3. **e2e-deployed**: the same Playwright specs against the preview URL, and **lighthouse**:
-   `tools/lighthouse.mjs` on it (mobile; accessibility 100 and SEO 95 or more required,
-   performance and best practices reported), its scores in the run summary.
+3. **lighthouse**: `tools/lighthouse.mjs` on the preview (mobile; accessibility 100 and SEO 95
+   or more required, performance and best practices reported), its scores in the run summary.
 4. **deploy-production** (push to `main`): the same files go live (a deploy to the project's
-   production branch, `main`), only after the deployed e2e and Lighthouse passed.
+   production branch, `main`), only after Lighthouse passed.
+5. **e2e** (push to `main`): the only E2E run. After production is live, `pnpm test:e2e` runs
+   against its URL (`E2E_BASE_URL`). It gates nothing, since it runs after the release.
 
 GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
-`Checks: lint, typecheck, unit, build`, `E2E: Run testing on mock API`, `Deploy: preview`,
-`E2E: deployed preview`, `Lighthouse: deployed preview`, `Deploy: production`. `needs:` and `if:` use the job ids above.
+`Checks: lint, typecheck, unit, build`, `Deploy: preview`, `Lighthouse: deployed preview`,
+`Deploy: production`, `E2E: production`. `needs:` and `if:` use the job ids above.
 A required status check in branch protection matches that name, so after renaming a job, select
 it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
 `Prod - Webapp Deployment`, whose Details link in the checks list opens the deploy (a job's own
@@ -164,17 +165,17 @@ Setup, once per repository: create the Pages project(s) with
 repository set the secret `CLOUDFLARE_API_TOKEN` (permission Cloudflare Pages: Edit) and the
 variables `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_PAGES_APP_PROJECT`
 (`CLOUDFLARE_PAGES_STORYBOOK_PROJECT` for a Storybook site). Without
-`CLOUDFLARE_PAGES_APP_PROJECT` the deploy jobs are skipped. Once the app has a
-backend, set `VITE_API_URL` on the `pnpm build` step of **check**, and upload `apps/web/dist/`
-from there as the `app` artifact instead of the one **e2e** uploads.
+`CLOUDFLARE_PAGES_APP_PROJECT` the deploy jobs are skipped, and so are **lighthouse** and **e2e**,
+which follow them. Once the app has a backend, set `VITE_API_URL` on the `pnpm build` step of
+**check**, and upload `apps/web/dist/` from there as the `app` artifact instead of the mock build
+**check** uploads.
 
 The **e2e** job builds an Allure 3 report (`apps/web/allurerc.ts`; its history carried in the
 Actions cache). With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus `CLOUDFLARE_ACCOUNT_ID` and
 the secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), it publishes it on Cloudflare
-Pages, and uploads it as an artifact only when it cannot go there (a fork's or Dependabot's pull
-request, or a failed deploy): `pr-<number>.<project>.pages.dev` on a pull request,
-`<project>.pages.dev` for `main`, linked from the commit status `E2E report`. **e2e-deployed** has
-no report: it checks what Pages serves, and its result is the job's log. Create the project once:
+Pages, and uploads it as an artifact only when it cannot go there (no project, or a failed
+deploy): `<project>.pages.dev`, linked from the commit status `E2E report`. It checks what Pages
+serves in production. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
 The **check** job publishes the unit tests' coverage report (Vitest's HTML, `apps/web/coverage/`)

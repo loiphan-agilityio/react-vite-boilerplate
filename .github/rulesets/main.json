@@ -36,15 +36,7 @@
             "integration_id": 15368
           },
           {
-            "context": "E2E: Run testing on mock API",
-            "integration_id": 15368
-          },
-          {
             "context": "Deploy: preview",
-            "integration_id": 15368
-          },
-          {
-            "context": "E2E: deployed preview",
             "integration_id": 15368
           },
           {

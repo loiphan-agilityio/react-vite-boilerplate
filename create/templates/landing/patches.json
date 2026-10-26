@@ -25,19 +25,24 @@
     "replace": "name: /people understand/"
   },
   {
-    "file": ".github/workflows/ci.yml",
-    "find": "      # Builds on mocks into dist-e2e/ and serves it with `vite preview`",
-    "replace": "      # Builds into dist-e2e/ (a landing page has no mocks) and serves it with `vite preview`"
-  },
-  {
     "file": "apps/web/playwright.config.ts",
     "find": "// Playwright builds the app on the mocked API (`pnpm build:mock`) and serves it with",
     "replace": "// Playwright builds the landing page (`pnpm build`: it has no mocks) and serves it with"
   },
   {
     "file": ".github/workflows/ci.yml",
-    "find": "# - e2e: the Playwright tests against the app built on the mocked API (`pnpm build:mock`).",
-    "replace": "# - e2e: the Playwright tests against the landing page's production build (`pnpm build`)."
+    "find": "boilerplate itself, the project generator's tests). It also builds the app on the mocked API\n#   (`pnpm build:mock`), the build every deploy publishes.\n",
+    "replace": "boilerplate itself, the project generator's tests). Its production build is what every deploy\n#   publishes: a landing page has no mocks.\n"
+  },
+  {
+    "file": ".github/workflows/ci.yml",
+    "find": "      # The build every deploy publishes, and the e2e job tests once it is live. Once the app has a\n      # backend, drop this step and upload apps/web/dist/ (check's `pnpm build`, with VITE_API_URL)\n      # as `app` instead.\n      - name: Build the app for the deploy\n        if: ${{ vars.CLOUDFLARE_PAGES_APP_PROJECT != '' }}\n        run: pnpm --filter web build:mock --outDir dist-e2e\n",
+    "replace": "      # The build every deploy publishes, and the e2e job tests once it is live.\n"
+  },
+  {
+    "file": ".github/workflows/ci.yml",
+    "find": "          path: apps/web/dist-e2e/\n",
+    "replace": "          path: apps/web/dist/\n"
   },
   {
     "file": "apps/web/CLAUDE.md",
@@ -51,8 +56,8 @@
   },
   {
     "file": "CLAUDE.md",
-    "find": "   (`pnpm test:e2e` on the mock build) in parallel.\n2. **deploy-draft**: the mock build **e2e** tested",
-    "replace": "   (`pnpm test:e2e` on the production build: a landing page has no mocks) in parallel.\n2. **deploy-draft**: the build **e2e** tested"
+    "find": "build, Storybook build, and the mock\n   build the deploys publish).\n2. **deploy-draft**: the mock build and the Storybook",
+    "replace": "build, Storybook build; its\n   production build is what the deploys publish: a landing page has no mocks).\n2. **deploy-draft**: the build and the Storybook"
   },
   {
     "file": ".claude/settings.json",
@@ -231,7 +236,7 @@
   },
   {
     "file": "CLAUDE.md",
-    "find": " Once the app has a\nbackend, set `VITE_API_URL` on the `pnpm build` step of **check**, and upload `apps/web/dist/`\nfrom there as the `app` artifact instead of the one **e2e** uploads.",
+    "find": " Once the app has a backend, set `VITE_API_URL` on the `pnpm build` step of\n**check**, and upload `apps/web/dist/` from there as the `app` artifact instead of the mock build\n**check** uploads.",
     "replace": ""
   },
   {
@@ -296,8 +301,8 @@
   },
   {
     "file": "apps/web/CLAUDE.md",
-    "find": "## End-to-end tests\n\n- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user\n  takes through the real app (open it from the header, read the list, submit the form, see the\n  result). Edge cases, error states and 422s stay in the unit tests.\n- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with\n  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on\n  data a backend would hold.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec\n  never assumes localhost or a port.\n\n",
-    "replace": "## End-to-end tests\n\n- Playwright specs live in `e2e/`: `home.spec.ts` walks the page as a visitor does (icons,\n  manifest, the Content-Security-Policy, the not-found page) and `accessibility.spec.ts`\n  runs axe for WCAG A and AA. A new section or page adds its flow to them.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec\n  never assumes localhost or a port.\n\n"
+    "find": "## End-to-end tests\n\n- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user\n  takes through the real app (open it from the header, read the list, submit the form, see the\n  result). Edge cases, error states and 422s stay in the unit tests.\n- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with\n  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on\n  data a backend would hold.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the live Cloudflare Pages site (`E2E_BASE_URL`), after the\n  production deploy, so a spec never assumes localhost or a port.\n\n",
+    "replace": "## End-to-end tests\n\n- Playwright specs live in `e2e/`: `home.spec.ts` walks the page as a visitor does (icons,\n  manifest, the Content-Security-Policy, the not-found page) and `accessibility.spec.ts`\n  runs axe for WCAG A and AA. A new section or page adds its flow to them.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the live Cloudflare Pages site (`E2E_BASE_URL`), after the\n  production deploy, so a spec never assumes localhost or a port.\n\n"
   },
   {
     "file": "apps/web/CLAUDE.md",

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// E2E_BASE_URL points the tests at a running app: CI sets it to the Cloudflare Pages preview URL. Without it,
+// E2E_BASE_URL points the tests at a running app: CI sets it to the production URL. Without it,
 // Playwright builds the app on the mocked API (`pnpm build:mock`) and serves it with
 // `vite preview`, the same build CI deploys. It builds into `dist-e2e/`, not `dist/`: `pnpm check`
 // runs `build` alongside, and both writing `dist/` left whichever finished last there (and in
