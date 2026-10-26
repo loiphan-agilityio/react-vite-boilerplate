@@ -36,7 +36,7 @@
             "integration_id": 15368
           },
           {
-            "context": "E2E: mock build",
+            "context": "E2E: mock API (CI runner)",
             "integration_id": 15368
           },
           {
@@ -44,7 +44,7 @@
             "integration_id": 15368
           },
           {
-            "context": "E2E: Netlify draft",
+            "context": "E2E: deployed preview",
             "integration_id": 15368
           },
           {

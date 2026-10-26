@@ -3,7 +3,7 @@ pnpm-lock.yaml
 **/dist-e2e
 **/coverage
 **/storybook-static
-**/playwright-report
+**/allure-report
 **/test-results
 **/blob-report
 **/.vitest

@@ -8,7 +8,7 @@ export default defineConfig({
     '**/dist-e2e/**',
     '**/storybook-static/**',
     '**/coverage/**',
-    '**/playwright-report/**',
+    '**/allure-report/**',
     '**/public/mockServiceWorker.js',
     // shadcn generates these; never hand-edit them (root CLAUDE.md, apps/web/CLAUDE.md).
     'packages/ui/src/components/**',
