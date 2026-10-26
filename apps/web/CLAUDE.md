@@ -166,8 +166,8 @@ ApiClient → effect/http`
   data a backend would hold.
 - Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first
   `await expect(locator).toBeVisible()`; never `waitForTimeout`.
-- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec
-  never assumes localhost or a port.
+- The same specs run in CI against the live Cloudflare Pages site (`E2E_BASE_URL`), after the
+  production deploy, so a spec never assumes localhost or a port.
 
 ## Stories
 
