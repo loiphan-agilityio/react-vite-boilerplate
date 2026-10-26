@@ -303,7 +303,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      statuses: write
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -342,8 +341,6 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
-          JOB_STATUS: ${{ job.status }}
-          GH_TOKEN: ${{ github.token }}
           # Wrangler writes its result here as ndjson, the deploy's URLs included.
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler.ndjson
         run: |
@@ -354,10 +351,9 @@ jobs:
           url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
             "$WRANGLER_OUTPUT_FILE_PATH")"
           [[ "$url" == https://* ]]
+          # The link is in the run's summary page and in an annotation at the top of the run.
           echo "Allure report: $url" >> "$GITHUB_STEP_SUMMARY"
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" -f state=success \
-            -f context='E2E report' -f target_url="$url" \
-            -f description="E2E $JOB_STATUS"
+          echo "::notice title=Allure report::$url"
       # An artifact only when the report did not reach Cloudflare Pages (no
       # CLOUDFLARE_PAGES_PROJECT, or a failed deploy).
       - uses: actions/upload-artifact@v7

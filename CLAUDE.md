@@ -174,8 +174,8 @@ The **e2e** job builds an Allure 3 report (`apps/web/allurerc.ts`; its history c
 Actions cache). With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus `CLOUDFLARE_ACCOUNT_ID` and
 the secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), it publishes it on Cloudflare
 Pages, and uploads it as an artifact only when it cannot go there (no project, or a failed
-deploy): `<project>.pages.dev`, linked from the commit status `E2E report`. It checks what Pages
-serves in production. Create the project once:
+deploy): `<project>.pages.dev`, linked from the run's summary page. It checks what Pages serves in
+production. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
 The **check** job publishes the unit tests' coverage report (Vitest's HTML, `apps/web/coverage/`)
