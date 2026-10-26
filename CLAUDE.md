@@ -142,9 +142,10 @@ since the lockfile is at the root. `apps/web` must keep all of these.
    `wrangler pages deploy apps/web/dist`. `apps/web/public/_headers` (copied into both builds)
    holds the headers; Pages serves `index.html` for any path that is not a file, and
    `apps/web/public/assets/404.html` makes a missing chunk a 404 instead (never add a top-level
-   `404.html`: it turns that fallback off). Each preview also sends `X-Robots-Tag: noindex` (rules
-   the job appends to its copy of `_headers`), so a leaked preview URL stays out of search
-   results; production is deployed without it.
+   `404.html`: it turns that fallback off). Each preview also sends `X-Robots-Tag: noindex` (the job
+   adds it to the `/*` block of its copy of `_headers`: Pages keeps one rule per path, so a
+   second `/*` block would drop the security headers), so a leaked preview URL stays out of
+   search results; production is deployed without it.
 3. **lighthouse**: `tools/lighthouse.mjs` on the preview (mobile; accessibility 100 and SEO 95
    or more required, performance and best practices reported), its scores in the run summary.
 4. **deploy-production** (push to `main`): the same files go live (a deploy to the project's
