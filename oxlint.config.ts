@@ -70,8 +70,7 @@ export default defineConfig({
   jsPlugins: [
     { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
     { name: 'anti-slop-effect', specifier: './tools/oxlint/anti-slop/effect/index.ts' },
-    // ESLint plugins, run through Oxlint's ESLint-compatible plugin API.
-    { name: '@tanstack/query', specifier: '@tanstack/eslint-plugin-query' },
+    // An ESLint plugin, run through Oxlint's ESLint-compatible plugin API without ESLint.
     { name: 'storybook', specifier: 'eslint-plugin-storybook' },
   ],
   rules: {
@@ -397,14 +396,6 @@ export default defineConfig({
         'jsx-a11y/role-supports-aria-props': 'error',
         'jsx-a11y/scope': 'error',
         'jsx-a11y/tabindex-no-positive': 'error',
-        // TanStack Query recommended.
-        '@tanstack/query/exhaustive-deps': 'error',
-        '@tanstack/query/infinite-query-property-order': 'error',
-        '@tanstack/query/mutation-property-order': 'error',
-        '@tanstack/query/no-rest-destructuring': 'warn',
-        '@tanstack/query/no-unstable-deps': 'error',
-        '@tanstack/query/no-void-query-fn': 'error',
-        '@tanstack/query/stable-query-client': 'error',
         'no-restricted-imports': ['error', { paths: restrictedPaths }],
         'no-restricted-globals': [
           'error',

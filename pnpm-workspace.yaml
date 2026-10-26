@@ -33,3 +33,6 @@ overrides:
   # fast-uri <3.1.9: URI scheme spoofing and host confusion (GHSA-333x-w4r6-6crp and related),
   # through @hookform/resolvers > ajv; `pnpm update --depth Infinity` kept 3.1.8.
   fast-uri: ^3.1.9
+  # No ESLint: Oxlint is the only linter. eslint-plugin-storybook declares eslint as a peer, but
+  # Oxlint runs it without ESLint, so nothing installs it.
+  eslint: '-'

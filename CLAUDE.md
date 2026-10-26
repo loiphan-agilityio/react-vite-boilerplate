@@ -16,7 +16,7 @@ packages/
   typescript-config/    @repo/typescript-config: base.json, react.json, node.json
 tools/oxlint/anti-slop/ anti-slop's Oxlint rules, vendored (UPSTREAM.md: source, commit, changes)
 oxlint.config.ts        the one linter's rules (Oxlint): ESLint's, typescript-eslint's (type-aware
-                        through oxlint-tsgolint), React, jsx-a11y, TanStack Query, Storybook, anti-slop
+                        through oxlint-tsgolint), React, jsx-a11y, Storybook, anti-slop; no ESLint
 package.json            root scripts (turbo) and commitlint config; lint-staged.config.mjs
 tsconfig.json           types for the root's own TypeScript (oxlint.config.ts), which the
                         type-aware lint rules need

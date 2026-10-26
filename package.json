@@ -30,7 +30,6 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@oxlint/plugins": "1.89.0",
-    "@tanstack/eslint-plugin-query": "^5.104.5",
     "@types/node": "catalog:",
     "eslint-plugin-storybook": "^10.6.3",
     "husky": "^9.1.7",
