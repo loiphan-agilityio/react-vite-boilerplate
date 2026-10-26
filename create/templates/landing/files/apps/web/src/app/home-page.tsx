@@ -66,7 +66,7 @@ const questions = [
   {
     question: 'Can it grow into an app?',
     answer:
-      'Yes: add a route and a feature folder under src/features; the API layer and mocks are already there.',
+      'Start a web app for that (create it with --app): it brings the API layer and mocks this page leaves out.',
   },
 ];
 

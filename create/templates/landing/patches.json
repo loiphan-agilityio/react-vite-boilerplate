@@ -30,11 +30,6 @@
     "replace": "name: /people understand/"
   },
   {
-    "file": "apps/web/e2e/home.spec.ts",
-    "find": "    // Only the local run is always the mock build (playwright.config.ts); a deploy built with\n    // `pnpm build` once the app has a backend starts no MSW, so it logs no warning.\n    if (!process.env.E2E_BASE_URL) {\n      expect(warnings.some((text) => text.startsWith('[MSW] Mocking is off'))).toBe(true);\n    }\n",
-    "replace": "    // A landing page builds without mocks, so it starts no MSW and logs no warning about it.\n"
-  },
-  {
     "file": ".github/workflows/ci.yml",
     "find": "      # Builds on mocks into dist-e2e/ and serves it with `vite preview`",
     "replace": "      # Builds into dist-e2e/ (a landing page has no mocks) and serves it with `vite preview`"
@@ -63,5 +58,295 @@
     "file": "CLAUDE.md",
     "find": "   (`pnpm test:e2e` on the mock build) in parallel.\n2. **deploy-draft**: the mock build **e2e** tested",
     "replace": "   (`pnpm test:e2e` on the production build: a landing page has no mocks) in parallel.\n2. **deploy-draft**: the build **e2e** tested"
+  },
+  {
+    "file": ".claude/settings.json",
+    "find": "      \"Bash(pnpm build-storybook)\",\n      \"Bash(pnpm check)\",\n      \"Bash(pnpm check:report)\",\n      \"Bash(pnpm dev:mock)\"\n    ]\n  },\n",
+    "replace": "      \"Bash(pnpm build-storybook)\",\n      \"Bash(pnpm check)\",\n      \"Bash(pnpm check:report)\"\n    ]\n  },\n"
+  },
+  {
+    "file": "apps/web/.claude/settings.json",
+    "find": "      \"Bash(pnpm build-storybook)\",\n      \"Bash(pnpm check)\",\n      \"Bash(pnpm dev:mock)\",\n      \"Bash(pnpm exec shadcn add *)\",\n      \"Bash(pnpm exec shadcn info *)\"\n",
+    "replace": "      \"Bash(pnpm build-storybook)\",\n      \"Bash(pnpm check)\",\n      \"Bash(pnpm exec shadcn add *)\",\n      \"Bash(pnpm exec shadcn info *)\"\n"
+  },
+  {
+    "file": "apps/web/.storybook/main.ts",
+    "find": "  addons: ['@storybook/addon-a11y'],\n  framework: '@storybook/react-vite',\n  // Serves public/mockServiceWorker.js, which the MSW worker in preview.tsx registers.\n  staticDirs: ['../public'],\n};\n",
+    "replace": "  addons: ['@storybook/addon-a11y'],\n  framework: '@storybook/react-vite',\n  // Serves public/ (icons, the web manifest) to the stories, as the app does.\n  staticDirs: ['../public'],\n};\n"
+  },
+  {
+    "file": "apps/web/.storybook/preview.tsx",
+    "find": "\nimport type { Preview } from '@storybook/react-vite';\nimport type { RequestHandler } from 'msw';\n\nimport { worker } from '../src/mocks/browser';\nimport { StoryProviders } from './story-providers';\n\ninterface MswParameters {\n  readonly msw?: { readonly handlers?: RequestHandler[] };\n}\n\nlet workerStarted: Promise<unknown> | undefined;\n\nconst preview: Preview = {\n  // MSW runs in every story, through the same worker as `pnpm dev:mock`.\n  async beforeEach({ parameters }) {\n    workerStarted ??= worker.start({ onUnhandledFrame: 'bypass', quiet: true });\n    await workerStarted;\n    // SAFETY: Storybook types parameters loosely; stories in this app set only `msw.handlers`\n    // (MswParameters), and a story without it falls back to no extra handlers.\n    worker.use(...((parameters as MswParameters).msw?.handlers ?? []));\n\n    return () => {\n      worker.resetHandlers();\n    };\n  },\n  decorators: [\n    (Story) => (\n",
+    "replace": "\nimport type { Preview } from '@storybook/react-vite';\n\nimport { StoryProviders } from './story-providers';\n\nconst preview: Preview = {\n  decorators: [\n    (Story) => (\n"
+  },
+  {
+    "file": "apps/web/.storybook/story-providers.tsx",
+    "find": "import { Toaster } from '@repo/ui/components/sonner';\nimport { QueryClientProvider } from '@tanstack/react-query';\nimport { type ReactNode, useState } from 'react';\nimport { MemoryRouter } from 'react-router';\n\nimport { createTestQueryClient } from '@/test/query-client';\n\n/** The providers a test gets (src/test/render.tsx): a fresh client without retries, a router, the Toaster. */\nexport const StoryProviders = ({ children }: { readonly children: ReactNode }) => {\n  const [queryClient] = useState(createTestQueryClient);\n\n  return (\n    <QueryClientProvider client={queryClient}>\n      <MemoryRouter>{children}</MemoryRouter>\n      <Toaster richColors />\n    </QueryClientProvider>\n  );\n};\n",
+    "replace": "import { Toaster } from '@repo/ui/components/sonner';\nimport type { ReactNode } from 'react';\nimport { MemoryRouter } from 'react-router';\n\n/** The providers a test gets (src/test/render.tsx): a router and the Toaster. */\nexport const StoryProviders = ({ children }: { readonly children: ReactNode }) => (\n  <>\n    <MemoryRouter>{children}</MemoryRouter>\n    <Toaster richColors />\n  </>\n);\n"
+  },
+  {
+    "file": "apps/web/e2e/home.spec.ts",
+    "find": "  await expect(page.getByText('Page not found')).toBeVisible();\n});\n\n// Some browsers refuse service workers (private windows, managed policies), so MSW cannot start in\n// the mock build: the app must still render, with a warning in the console.\ntest.describe('when the browser blocks service workers', () => {\n  test.use({ serviceWorkers: 'block' });\n\n  test('still renders the app', async ({ page }) => {\n    const warnings: string[] = [];\n    page.on('console', (message) => {\n      if (message.type() === 'warning') warnings.push(message.text());\n    });\n    await page.goto('/');\n    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();\n\n    // Only the local run is always the mock build (playwright.config.ts); a deploy built with\n    // `pnpm build` once the app has a backend starts no MSW, so it logs no warning.\n    if (!process.env.E2E_BASE_URL) {\n      expect(warnings.some((text) => text.startsWith('[MSW] Mocking is off'))).toBe(true);\n    }\n  });\n});\n",
+    "replace": "  await expect(page.getByText('Page not found')).toBeVisible();\n});\n"
+  },
+  {
+    "file": "apps/web/netlify.toml",
+    "find": "  [headers.values]\n    Content-Type = \"application/manifest+json\"\n\n# The MSW worker keeps its name across releases: always revalidate it.\n[[headers]]\n  for = \"/mockServiceWorker.js\"\n  [headers.values]\n    Cache-Control = \"no-cache\"\n",
+    "replace": "  [headers.values]\n    Content-Type = \"application/manifest+json\"\n"
+  },
+  {
+    "file": "apps/web/package.json",
+    "find": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"dev:mock\": \"vite --mode mock\",\n    \"build\": \"tsc -b && vite build\",\n    \"build:mock\": \"tsc -b && vite build --mode mock\",\n    \"preview\": \"vite preview\",\n    \"postinstall\": \"msw init\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"eslint . --max-warnings=0 && oxlint -c ../../oxlint.config.ts . && prettier --check .\",\n",
+    "replace": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc -b && vite build\",\n    \"preview\": \"vite preview\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"eslint . --max-warnings=0 && oxlint -c ../../oxlint.config.ts . && prettier --check .\",\n"
+  },
+  {
+    "file": "apps/web/package.json",
+    "find": "  },\n  \"dependencies\": {\n    \"@hookform/resolvers\": \"^6.0.0\",\n    \"@repo/ui\": \"workspace:*\",\n    \"@tanstack/react-query\": \"^5.104.5\",\n    \"effect\": \"^4.0.5\",\n    \"lucide-react\": \"catalog:\",\n    \"react\": \"catalog:\",\n    \"react-dom\": \"catalog:\",\n    \"react-hook-form\": \"^7.90.0\",\n    \"react-router\": \"^8.5.0\",\n    \"sonner\": \"catalog:\"\n",
+    "replace": "  },\n  \"dependencies\": {\n    \"@repo/ui\": \"workspace:*\",\n    \"lucide-react\": \"catalog:\",\n    \"react\": \"catalog:\",\n    \"react-dom\": \"catalog:\",\n    \"react-router\": \"^8.5.0\",\n    \"sonner\": \"catalog:\"\n"
+  },
+  {
+    "file": "apps/web/package.json",
+    "find": "    \"eslint\": \"catalog:\",\n    \"jsdom\": \"^30.1.3\",\n    \"msw\": \"^3.0.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n",
+    "replace": "    \"eslint\": \"catalog:\",\n    \"jsdom\": \"^30.1.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n"
+  },
+  {
+    "file": "apps/web/package.json",
+    "find": "    \"vite\": \"^8.3.5\",\n    \"vitest\": \"^5.0.5\"\n  },\n  \"msw\": {\n    \"workerDirectory\": [\n      \"public\"\n    ]\n  }\n}\n",
+    "replace": "    \"vite\": \"^8.3.5\",\n    \"vitest\": \"^5.0.5\"\n  }\n}\n"
+  },
+  {
+    "file": "apps/web/src/app/providers.tsx",
+    "find": "import { Toaster } from '@repo/ui/components/sonner';\nimport { QueryClientProvider } from '@tanstack/react-query';\nimport { type ReactNode, useState } from 'react';\n\nimport { createQueryClient } from '@/lib/query-client';\n\n/** App-wide providers. The router is rendered inside, so every route can use them. */\nexport const AppProviders = ({ children }: { readonly children: ReactNode }) => {\n  // One client per mounted app (useState keeps it stable across re-renders).\n  const [queryClient] = useState(createQueryClient);\n\n  return (\n    <QueryClientProvider client={queryClient}>\n      {children}\n      <Toaster richColors />\n    </QueryClientProvider>\n  );\n};\n",
+    "replace": "import { Toaster } from '@repo/ui/components/sonner';\nimport type { ReactNode } from 'react';\n\n/** App-wide providers. The router is rendered inside, so every route can use them. */\nexport const AppProviders = ({ children }: { readonly children: ReactNode }) => (\n  <>\n    {children}\n    <Toaster richColors />\n  </>\n);\n"
+  },
+  {
+    "file": "apps/web/src/main.tsx",
+    "find": "import { AppProviders } from '@/app/providers';\nimport { createRoutes } from '@/app/routes';\nimport { config } from '@/lib/config';\nimport { reportRouteError } from '@/lib/report-error';\nimport { reloadOnStaleChunk } from '@/lib/stale-chunk';\n",
+    "replace": "import { AppProviders } from '@/app/providers';\nimport { createRoutes } from '@/app/routes';\nimport { reportRouteError } from '@/lib/report-error';\nimport { reloadOnStaleChunk } from '@/lib/stale-chunk';\n"
+  },
+  {
+    "file": "apps/web/src/main.tsx",
+    "find": "// A lazy route whose chunk is gone after a deploy reloads the tab once (see stale-chunk.ts).\nwindow.addEventListener('vite:preloadError', reloadOnStaleChunk());\n\n// On in `pnpm dev:mock` and in `pnpm build:mock` (the build CI deploys while the app has no\n// backend). The check reads the value Vite replaces at build time (config.apiMocking validated the\n// same value): a build without VITE_API_MOCKING=true drops this branch and the MSW chunk with its\n// handlers and fixtures, and vite.config.ts leaves mockServiceWorker.js out of it.\nif (import.meta.env.VITE_API_MOCKING === 'true' && config.apiMocking) {\n  const { worker } = await import('@/mocks/browser');\n  // A browser that refuses service workers (private windows, managed policies) still gets the\n  // app: requests then reach the network, and data screens show their error state.\n  await worker.start({ onUnhandledFrame: 'bypass' }).catch((cause: unknown) => {\n    console.warn('[MSW] Mocking is off: the service worker did not start.', cause);\n  });\n}\n\nconst router = createBrowserRouter(createRoutes());\n",
+    "replace": "// A lazy route whose chunk is gone after a deploy reloads the tab once (see stale-chunk.ts).\nwindow.addEventListener('vite:preloadError', reloadOnStaleChunk());\n\nconst router = createBrowserRouter(createRoutes());\n"
+  },
+  {
+    "file": "apps/web/src/test/render.tsx",
+    "find": "import { Toaster } from '@repo/ui/components/sonner';\nimport { QueryClientProvider } from '@tanstack/react-query';\nimport { render } from '@testing-library/react';\nimport userEvent from '@testing-library/user-event';\n",
+    "replace": "import { Toaster } from '@repo/ui/components/sonner';\nimport { render } from '@testing-library/react';\nimport userEvent from '@testing-library/user-event';\n"
+  },
+  {
+    "file": "apps/web/src/test/render.tsx",
+    "find": "import { createRoutes } from '@/app/routes';\n\nimport { createTestQueryClient } from './query-client';\n\nconst renderRouter = (routes: RouteObject[], path: string) => {\n  const queryClient = createTestQueryClient();\n  const router = createMemoryRouter(routes, { initialEntries: [path] });\n  const user = userEvent.setup();\n\n  const result = render(\n    <QueryClientProvider client={queryClient}>\n      <RouterProvider router={router} />\n      {/* As in AppProviders, so tests can assert toasts with findByText. */}\n      <Toaster richColors />\n    </QueryClientProvider>,\n  );\n\n  return { ...result, user, queryClient, router };\n};\n\n",
+    "replace": "import { createRoutes } from '@/app/routes';\n\nconst renderRouter = (routes: RouteObject[], path: string) => {\n  const router = createMemoryRouter(routes, { initialEntries: [path] });\n  const user = userEvent.setup();\n\n  const result = render(\n    <>\n      <RouterProvider router={router} />\n      {/* As in AppProviders, so tests can assert toasts with findByText. */}\n      <Toaster richColors />\n    </>,\n  );\n\n  return { ...result, user, router };\n};\n\n"
+  },
+  {
+    "file": "apps/web/src/test/setup.ts",
+    "find": "import { toast } from 'sonner';\n\nimport { server } from '@/mocks/server';\n\n// Feature routes are lazy, and coverage instrumentation slows their first load: the default 1s\n// for findBy* / waitFor times out now and then on a page test, more so under `pnpm check` (see\n// `maxWorkers` in vite.config.ts). A real failure still fails.\nconfigure({ asyncUtilTimeout: 5000 });\n\n",
+    "replace": "import { toast } from 'sonner';\n\n// Lazy routes and coverage instrumentation slow a first load: the default 1s for findBy* / waitFor\n// times out now and then on a page test, more so under `pnpm check` (see `maxWorkers` in\n// vite.config.ts). A real failure still fails.\nconfigure({ asyncUtilTimeout: 5000 });\n\n"
+  },
+  {
+    "file": "apps/web/src/test/setup.ts",
+    "find": "});\n\n// 'error' makes a request with no matching handler fail the test instead of hitting the network.\nbeforeAll(() => {\n  server.listen({ onUnhandledFrame: 'error' });\n});\n\n// sonner keeps toasts in a module-level store; without this a toast from one test shows up in the\n// next test's Toaster.\n",
+    "replace": "});\n\n// sonner keeps toasts in a module-level store; without this a toast from one test shows up in the\n// next test's Toaster.\n"
+  },
+  {
+    "file": "apps/web/src/test/setup.ts",
+    "find": "  toast.dismiss();\n});\n\n// Drop per-test overrides added with server.use().\nafterEach(() => {\n  server.resetHandlers();\n});\n\nafterAll(() => {\n  server.close();\n});\n",
+    "replace": "  toast.dismiss();\n});\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "import { rm } from 'node:fs/promises';\nimport { resolve } from 'node:path';\n\n",
+    "replace": "import { resolve } from 'node:path';\n\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "\n/**\n * Content-Security-Policy of the built app. connect-src allows any https origin so a real\n * VITE_API_URL works without an edit here; narrow it to your API's origin once you know it. An\n * http VITE_API_URL (a local backend, as in .env.example) adds its origin, or the browser blocks\n * every API call. 'unsafe-inline' styles: sonner inserts a <style> element. Scripts stay 'self'.\n */\nconst contentSecurityPolicy = (apiUrl: string) =>\n  [\n    \"default-src 'self'\",\n",
+    "replace": "\n/**\n * Content-Security-Policy of the built page. A landing page calls no API, so connect-src is the\n * page's own origin; add an origin here when the page starts calling one (a form endpoint, an\n * analytics host). 'unsafe-inline' styles: sonner inserts a <style> element. Scripts stay 'self'.\n */\nconst contentSecurityPolicy = () =>\n  [\n    \"default-src 'self'\",\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "    \"img-src 'self' data:\",\n    \"font-src 'self' data:\",\n    `connect-src 'self' https:${apiUrl.startsWith('http://') ? ` ${new URL(apiUrl).origin}` : ''}`,\n    \"worker-src 'self'\",\n    \"object-src 'none'\",\n    \"base-uri 'self'\",\n",
+    "replace": "    \"img-src 'self' data:\",\n    \"font-src 'self' data:\",\n    \"connect-src 'self'\",\n    \"object-src 'none'\",\n    \"base-uri 'self'\",\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "    name: 'csp-meta-tag',\n    apply: 'build',\n    configResolved: ({ root, env }) => {\n      appIndexHtml = resolve(root, 'index.html');\n      // env holds the VITE_* values Vite loaded for this build (.env, .env.local, the shell).\n      policy = contentSecurityPolicy(String(env.VITE_API_URL ?? ''));\n    },\n    transformIndexHtml: (html, { filename }) =>\n",
+    "replace": "    name: 'csp-meta-tag',\n    apply: 'build',\n    configResolved: ({ root }) => {\n      appIndexHtml = resolve(root, 'index.html');\n      policy = contentSecurityPolicy();\n    },\n    transformIndexHtml: (html, { filename }) =>\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "};\n\n/**\n * public/mockServiceWorker.js is copied into every build, but only a build with\n * VITE_API_MOCKING=true registers it (main.tsx): drop it from the others, so a production build\n * ships no part of the mock API. Only in the app's own build: Storybook loads this config too and\n * serves the worker to its stories. The app build is the one that turns the app's index.html.\n */\nconst mockWorkerOnlyWhenMocking = (): Plugin => {\n  let appIndexHtml = '';\n  let worker = '';\n  let mocking = false;\n  let appBuild = false;\n\n  return {\n    name: 'mock-worker-only-when-mocking',\n    apply: 'build',\n    configResolved: ({ root, build, env }) => {\n      appIndexHtml = resolve(root, 'index.html');\n      worker = resolve(root, build.outDir, 'mockServiceWorker.js');\n      mocking = env.VITE_API_MOCKING === 'true';\n    },\n    transformIndexHtml: (html, { filename }) => {\n      if (resolve(filename) === appIndexHtml) appBuild = true;\n\n      return html;\n    },\n    closeBundle: async () => {\n      if (appBuild && !mocking) await rm(worker, { force: true });\n    },\n  };\n};\n\nexport default defineConfig({\n  plugins: [react(), tailwindcss(), cspMetaTag(), mockWorkerOnlyWhenMocking()],\n  // Reads the `@/*` alias from tsconfig, so the alias is declared once.\n  resolve: { tsconfigPaths: true },\n",
+    "replace": "};\n\nexport default defineConfig({\n  plugins: [react(), tailwindcss(), cspMetaTag()],\n  // Reads the `@/*` alias from tsconfig, so the alias is declared once.\n  resolve: { tsconfigPaths: true },\n"
+  },
+  {
+    "file": "apps/web/vite.config.ts",
+    "find": "              test: /[\\\\/]node_modules[\\\\/](react|react-dom|react-router|scheduler)[\\\\/]/,\n            },\n            { name: 'effect', test: /[\\\\/]node_modules[\\\\/]effect[\\\\/]/ },\n            { name: 'vendor', test: /[\\\\/]node_modules[\\\\/]/ },\n          ],\n",
+    "replace": "              test: /[\\\\/]node_modules[\\\\/](react|react-dom|react-router|scheduler)[\\\\/]/,\n            },\n            { name: 'vendor', test: /[\\\\/]node_modules[\\\\/]/ },\n          ],\n"
+  },
+  {
+    "file": "package.json",
+    "find": "  \"scripts\": {\n    \"dev\": \"turbo run dev --filter=web\",\n    \"dev:mock\": \"turbo run dev:mock --filter=web\",\n    \"build\": \"turbo run build\",\n    \"typecheck\": \"turbo run typecheck\",\n",
+    "replace": "  \"scripts\": {\n    \"dev\": \"turbo run dev --filter=web\",\n    \"build\": \"turbo run build\",\n    \"typecheck\": \"turbo run typecheck\",\n"
+  },
+  {
+    "file": "turbo.json",
+    "find": "      \"inputs\": [\"$TURBO_DEFAULT$\", \".env*\"]\n    },\n    \"dev:mock\": {\n      \"cache\": false,\n      \"persistent\": true,\n      \"env\": [\"VITE_*\"],\n      \"inputs\": [\"$TURBO_DEFAULT$\", \".env*\"]\n    },\n    \"storybook\": {\n      \"cache\": false,\n",
+    "replace": "      \"inputs\": [\"$TURBO_DEFAULT$\", \".env*\"]\n    },\n    \"storybook\": {\n      \"cache\": false,\n"
+  },
+  {
+    "file": "README.md",
+    "find": "pnpm dev:mock   # the API is answered by MSW mocks: no backend needed\npnpm dev        # needs a real backend at VITE_API_URL (copy apps/web/.env.example to apps/web/.env.local)\n",
+    "replace": "pnpm dev\n"
+  },
+  {
+    "file": "README.md",
+    "find": "with what to change before real users (a backend instead of the mocks, among others).",
+    "replace": "with what to change before real users."
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "  web/                  the app (package `web`): React SPA, its API layer, tests, mocks, Storybook",
+    "replace": "  web/                  the landing page (package `web`): React SPA, tests, Storybook"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "| `pnpm dev` | `web` dev server. `pnpm dev:mock` serves its API from MSW mocks. |",
+    "replace": "| `pnpm dev` | `web` dev server. |"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "Playwright end-to-end tests on the mocked build (uncached).",
+    "replace": "Playwright end-to-end tests on the production build (uncached)."
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "- App-specific code stays in the app: its features, its API layer (`src/lib/api`), config,\n  mocks and test helpers. Move code",
+    "replace": "- App-specific code stays in the app: its pages, components and test helpers. Move code"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "They treat an app as tier\n`template` only if its `package.json` declares `react`, `vite`, `effect`, `@tanstack/react-query`\nand `react-hook-form`, `src/lib/api/client.ts` contains `ApiClient`, and `src/test/render.tsx`\nexists.",
+    "replace": "They treat this landing page as\ntier `template` (variant `landing`) while its `package.json` declares `react`, `vite` and\n`@repo/ui` and `src/test/render.tsx` exists. It has no API layer, so they build its UI\n(`ui-development`) and answer a feature or endpoint request with a new web app instead."
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "`index.html`, `public/` (the `msw init` target),\n   `.storybook/`, `src/main.tsx`, `src/test/`, `src/mocks/`, `.env.example`, `.env.mock`.",
+    "replace": "`index.html`, `public/`,\n   `.storybook/`, `src/main.tsx`, `src/test/`."
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": " Once the app has a\nbackend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/web/dist/` from\nthere as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to\n`build` in `apps/web/netlify.toml`.",
+    "replace": ""
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "a stale tab reloaded once after a deploy, no mock code in a `pnpm build`), but a",
+    "replace": "a stale tab reloaded once after a deploy), but a"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "- **Backend:** the paragraph above (`VITE_API_URL`, `build` instead of `build:mock`).\n- **Content-Security-Policy:** in `apps/web/vite.config.ts`, narrow `connect-src` from `https:` to\n  the API's origin.\n- **Token storage** (with authentication): `apps/web/src/lib/api/token.ts` keeps the bearer token\n  in localStorage, which any script on the page can read; move it to an httpOnly cookie once the\n  backend supports one. There is no refresh token: a 401 ends the session.\n",
+    "replace": "- **Content-Security-Policy:** `apps/web/vite.config.ts` allows `connect-src 'self'` only: add the\n  origin of any service the page starts calling (a form endpoint, analytics).\n"
+  },
+  {
+    "file": "CLAUDE.md",
+    "find": "- **Error reporting:** every unexpected error (a route that throws, a 5xx, a response that breaks\n  its schema) goes through",
+    "replace": "- **Error reporting:** every unexpected error (a route that throws) goes through"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "Single-page app: React 19, Vite 8, TypeScript 6 (strict), Effect 4, TanStack Query 5,\nReact Hook Form 7, shadcn/ui on Tailwind CSS 4, React Router 8. Tests: Vitest 5, React Testing\nLibrary, MSW 3; end-to-end: Playwright. Deployed to Netlify (`netlify.toml`) by the monorepo's\nCI/CD (`../../CLAUDE.md`).",
+    "replace": "Landing page: one public marketing page on React 19, Vite 8, TypeScript 6 (strict), shadcn/ui\non Tailwind CSS 4 and React Router 8. Tests: Vitest 5, React Testing Library; end-to-end:\nPlaywright with axe. It calls no API: there is no API layer and no mocks. Deployed to Netlify\n(`netlify.toml`) by the monorepo's CI/CD (`../../CLAUDE.md`)."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "| `pnpm dev` | Dev server. `pnpm dev:mock` (Vite mode `mock`, reads `.env.mock`) serves the API from `src/mocks` (MSW), in any shell. |",
+    "replace": "| `pnpm dev` | Dev server. |"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "| `pnpm build` | Typecheck + production build. `pnpm build:mock` builds with MSW on (`.env.mock`): what CI deploys while the app has no backend. A browser that blocks service workers still gets the app, unmocked, with a console warning. |",
+    "replace": "| `pnpm build` | Typecheck + production build: what CI tests and deploys. |"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "(stories render inside `.storybook/story-providers.tsx`, MSW on)",
+    "replace": "(stories render inside `.storybook/story-providers.tsx`)"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "  app/              routes.tsx (createRoutes), providers.tsx, root-layout.tsx, route-error.tsx\n  components/       shared app components, one folder per component (as in a feature, below)\n  features/<name>/  one folder per feature (names below are for an `items` feature):\n    schemas.ts        Effect Schemas + derived types: Item, ItemList, NewItem / NewItemInput\n    model.ts          business rules as pure functions of those types\n    api.ts            Effect.fn functions that call ApiClient: listItems, createItem\n    queries.ts        key factory itemKeys, itemListQueryOptions(), mutation hooks useCreateItem()\n    mocks.ts          createItemsHandlers(initial) + itemsMocks (MSW)\n    routes.tsx        itemRoutes() — lazy route objects\n    components/       one folder per component, named like its export (PascalCase):\n      ItemForm/\n        index.tsx                     the component itself (export const ItemForm), not a re-export\n        ItemForm.stories.tsx\n        __tests__/ItemForm.test.tsx\n        types.ts, utils.ts, ...       only what ItemForm alone uses; a second user moves it out\n  lib/\n    config.ts         every env value (VITE_*), read statically and validated with Effect Schema;\n                      `config` outside Effect, the `AppConfig` service inside it\n    runtime.ts        AppLayer + the ManagedRuntime\n    query-client.ts   createQueryClient(); query errors are typed as ApiError\n    report-error.ts   reportError(): the one exit for an unexpected error (console, or a tracker)\n    forms.ts          setFormErrors(): API errors → React Hook Form\n    api/client.ts     ApiClient: the only way to call the backend\n    api/auth.ts       AuthToken: the bearer token ApiClient sends (none until the app has sign-in)\n    api/errors.ts     ApiError union + toUserMessage()\n    api/run.ts        runEffect(effect, signal): Effect → Promise for TanStack Query\n  mocks/            handlers.ts (all feature handlers), server.ts (Vitest), browser.ts (dev)\n  test/             setup.ts, render.tsx (renderRoute, renderWithProviders)\ne2e/                Playwright specs: home.spec.ts, then <feature>.spec.ts per feature\n",
+    "replace": "  app/              home-page.tsx (the landing page), routes.tsx (createRoutes), providers.tsx,\n                    root-layout.tsx, route-error.tsx\n  components/       shared components, one folder per component, named like its export:\n    Pricing/\n      index.tsx                     the component itself (export const Pricing), not a re-export\n      Pricing.stories.tsx\n      __tests__/Pricing.test.tsx\n  lib/\n    report-error.ts   reportError(): the one exit for an unexpected error (console, or a tracker)\n    stale-chunk.ts    reloadOnStaleChunk(): reloads a tab once when a chunk is gone after a deploy\n  test/             setup.ts, render.tsx (renderRoute, renderWithProviders)\ne2e/                Playwright specs: home.spec.ts, accessibility.spec.ts (axe)\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "- Arrow functions only: `export const ItemList = () => { ... };`, `export const useX = () => ...`.\n  `function*` stays only inside `Effect.gen` / `Effect.fn`. A component that only returns markup",
+    "replace": "- Arrow functions only: `export const Pricing = () => { ... };`, `export const useX = () => ...`.\n  A component that only returns markup"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "- Inline type imports (`import { type Item, NewItem } from './schemas'`); `pnpm lint:fix`",
+    "replace": "- Inline type imports (`import { type Plan, plans } from './plans'`); `pnpm lint:fix`"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "## How data flows\n\n`component → useQuery(xQueryOptions()) / useXMutation() → runEffect → Effect.fn in api.ts →\nApiClient → effect/http`\n\n- **Never call `fetch` (or axios, or `XMLHttpRequest`) in app code.** Every request goes through\n  `ApiClient`, which prefixes `apiUrl` from `AppConfig`, adds the `AuthToken` bearer token\n  when there is one, decodes the body with the schema you pass, and\n  maps every failure to an `ApiError`. Lint rejects `fetch`, `window.fetch`, `globalThis.fetch`,\n  `XMLHttpRequest` and `axios`.\n- **`runEffect` is the only bridge to TanStack Query.** Pass the query's `signal` so\n  cancellation aborts the request. It rejects with the typed `ApiError`: branch on it with the\n  error classes (`error instanceof UnauthorizedError`) or Effect's `Match` (`Match.tagsExhaustive`),\n  never on `_tag` by hand (anti-slop rejects it).\n- **Retries live in TanStack Query only** (queries: once, and only for `NetworkError` or a\n  `ServerError` with a 5xx status; mutations: never). Do not add `HttpClient.retryTransient`.\n- **Unexpected errors are reported in one place:** `createQueryClient` reports a 5xx\n  `ServerError` or an `InvalidResponseError` from any query or mutation, and RouterProvider's\n  `onError` (`reportRouteError`) a route that throws, both through `reportError`, all in\n  `src/lib/report-error.ts`. A feature shows its error state and never logs or reports an API\n  error itself; a 4xx or a `NetworkError` is the user's to see, not a bug.\n- **Query keys come from a key factory** in `queries.ts`; mutations invalidate exactly the\n  keys they change, and return that promise from `onSuccess`.\n- **Every data screen renders four distinct states:** loading (`isPending`, not `isLoading`),\n  error (with `toUserMessage` and a retry), empty (with the next action), success. Empty and\n  error never look the same.\n- **Forms:** `useForm<Input, unknown, Output>({ resolver, defaultValues })` with\n  `effectTsResolver(Schema)` built once at module level (`Input`/`Output` are the schema's\n  Encoded/Type: inferred from `defaultValues`, a literal union widens to `string`), `Controller` + shadcn `Field` / `FieldLabel` / `FieldError`,\n  `data-invalid` on `Field`, `aria-invalid` on the control. Server errors go through\n  `setFormErrors(form.setError, error, form.getValues())`: with the values, a message for a name\n  the form has no input for shows above the submit button instead of nowhere.\n- **Business rules are pure functions in the feature's `model.ts`** (what sorts first, a total,\n  what counts as overdue), tested in `__tests__/model.test.ts` without rendering. Components and\n  queries call them instead of computing a rule inline; a rule that needs today's date takes it as\n  a parameter, so it stays pure.\n- **A feature uses another feature only through its `schemas`, `model`, `queries` or `routes`.**\n  Its `api`, `mocks` and `components` are internal, and lint rejects importing them from another\n  feature. Imports inside a feature are relative.\n- **Routes are factories** (`createRoutes()`, `<name>Routes()`): React Router mutates route\n  objects when a lazy route loads, so each router needs fresh ones.\n\n",
+    "replace": "## A page without an API\n\n- **This page calls no backend.** For data, sign-in or a form that posts, start a web app\n  (`--app`) rather than adding an API layer here. Lint still rejects `fetch`,\n  `XMLHttpRequest` and `axios` in app code.\n- **Unexpected errors are reported in one place:** RouterProvider's `onError`\n  (`reportRouteError`) reports a route that throws through `reportError`, in\n  `src/lib/report-error.ts`.\n- **Routes are factories** (`createRoutes()`): React Router mutates route objects when a lazy\n  route loads, so each router needs fresh ones.\n\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "## Testing\n\n- `renderRoute('/path')` renders the real route tree; `renderWithProviders(<X />)` renders one\n  component. Both return `{ user, queryClient, router, ...rtl }`; use `user` (user-event).\n  Both mount the `Toaster`, so a toast is asserted as text (`findByText`); do not mock `sonner`.\n  `src/test/__tests__/toaster.test.tsx` guards that the app's `toast()` and the `<Toaster>` from\n  `@repo/ui` share one sonner instance.\n- MSW runs for every test with `onUnhandledFrame: 'error'`: a request without a handler fails\n  the test. Drive states with `server.use(...)`; **a later `server.use()` call wins**, and\n  within one call the first matching handler wins.\n- Each feature's `mocks.ts` exports `create<Name>Handlers(initial)` (fresh in-memory data per\n  call) and `<name>Mocks` (pending / error / validation responses). List a fixed path before a\n  path with a parameter (`/tasks/stats` before `/tasks/:id`): the first match wins, and\n  `:id` would match `stats`.\n- Tests live in a `__tests__/` folder next to the code they test, never beside the file itself\n  (`components/ItemForm/index.tsx` → `components/ItemForm/__tests__/ItemForm.test.tsx`,\n  `schemas.ts` → `__tests__/schemas.test.ts`). Every component has a unit test file there that renders it\n  alone with `renderWithProviders(<X />)`. The page test (`renderRoute`) covers only how the\n  parts work together, not each component's cases again.\n- Query by role and label, not test ids. Test all four states and every form error path.\n- After a navigation to a lazy route, wait for the new page (`findBy*`) before asserting:\n  until the route loads, the old page is still on screen.\n\n",
+    "replace": "## Testing\n\n- `renderRoute('/path')` renders the real route tree; `renderWithProviders(<X />)` renders one\n  component. Both return `{ user, router, ...rtl }`; use `user` (user-event).\n  Both mount the `Toaster`, so a toast is asserted as text (`findByText`); do not mock `sonner`.\n  `src/test/__tests__/toaster.test.tsx` guards that the app's `toast()` and the `<Toaster>` from\n  `@repo/ui` share one sonner instance.\n- Tests live in a `__tests__/` folder next to the code they test, never beside the file itself\n  (`components/Pricing/index.tsx` → `components/Pricing/__tests__/Pricing.test.tsx`). Every\n  component has a unit test file there that renders it alone with `renderWithProviders(<X />)`.\n  The page test (`renderRoute`) covers how the sections work together.\n- Query by role and label, not test ids: one `h1`, headings in order, every link and button\n  named.\n- After a navigation to a lazy route, wait for the new page (`findBy*`) before asserting:\n  until the route loads, the old page is still on screen.\n\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "## End-to-end tests\n\n- Playwright specs live in `e2e/`, one `<feature>.spec.ts` per feature: the main flow a user\n  takes through the real app (open it from the header, read the list, submit the form, see the\n  result). Edge cases, error states and 422s stay in the unit tests.\n- They run against the mocked API: the feature's default handlers in `src/mocks/handlers.ts`, with\n  the fixtures in its `mocks.ts`, fresh on every page load. Assert on fixture values, never on\n  data a backend would hold.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes\n  localhost or a port.\n\n",
+    "replace": "## End-to-end tests\n\n- Playwright specs live in `e2e/`: `home.spec.ts` walks the page as a visitor does (icons,\n  manifest, the Content-Security-Policy, the not-found page) and `accessibility.spec.ts`\n  runs axe for WCAG A and AA. A new section or page adds its flow to them.\n- Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first\n  `await expect(locator).toBeVisible()`; never `waitForTimeout`.\n- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes\n  localhost or a port.\n\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "with one story per state it renders, driven by the feature's\n  `mocks.ts` through `parameters.msw.handlers`.",
+    "replace": "with one story per variant it renders."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "wraps every story in the same providers as a test and\n  starts the app's MSW worker: add no providers in a story.",
+    "replace": "wraps every story in the same providers as a test: add no\n  providers in a story."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "**Learning more about Effect.** This repository uses the Effect TypeScript library. Before\nwriting any Effect code, first read `node_modules/effect/AGENTS.md` **completely**, and follow\nthe links in the file when required. If you need to learn more about particular Effect APIs\nand concepts that the guide doesn't cover, search through the source code in\n`node_modules/effect/src`.\n\n- **Effect 4:** services are `Context.Service`, not `Context.Tag` / `Effect.Service`. HTTP is\n  `effect/http`, not `@effect/platform`. Errors are `Schema.TaggedError`. Decode with\n  `Schema.decodeUnknownEffect` (failure: `SchemaError`), or `Schema.decodeUnknownSync` in tests.\n  Catch-all is `Effect.catch`. Functions are `Effect.fn('name')(function* () { ... })`. Validation\n  messages go through `Schema.check(Schema.isMinLength(1, { message }))`.\n- **React Hook Form + Effect:** `@hookform/resolvers` 6 ships `effectTsResolver` for Effect 4\n  (`@hookform/resolvers/effect-ts`); it takes the Schema itself. Older docs say it is Effect-3\n  only; that was version 5. No `zodResolver`, no `Schema.toStandardSchemaV1` wrapper.\n",
+    "replace": ""
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "- **MSW 3:** `http` / `HttpResponse` from `msw/http`; `delay` / `bypass` / `passthrough` from\n  `msw/utils/<name>`; `setupServer` from `msw/node`, `setupWorker` from `msw/browser`; no\n  `rest.get`; `onUnhandledRequest` is now `onUnhandledFrame`. Precedence: a later `server.use()`\n  call wins; within one call the first matching handler wins.\n- **TanStack Query 5:** `isPending` for the first load; object syntax only; `queryOptions()`.\n",
+    "replace": ""
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "never\n  `jest.*`. Mock the API with MSW, never `vi.stubGlobal('fetch')` or `vi.mock` of an `api.ts`.",
+    "replace": "never\n  `jest.*`."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "(`play` gets `canvas` and `userEvent` from its context). API mocks go in\n  `parameters.msw.handlers`; there is no `msw-storybook-addon`.",
+    "replace": "(`play` gets `canvas` and `userEvent` from its context)."
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "To stay tier `template` for them, this app must keep `src/lib/api/client.ts`\n(`ApiClient`), `src/test/render.tsx`, and in its `package.json` the stack dependencies (`react`,\n`vite`, `effect`, `@tanstack/react-query`, `react-hook-form`) and `packageManager`.\n\n",
+    "replace": "They treat this page as tier `template` (variant `landing`) while\n`src/test/render.tsx` exists and its `package.json` keeps `react`, `vite`, `@repo/ui` and\n`packageManager`.\n\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "- `develop` — the entry point (`/web-dev:develop <request>`): detects the project, sorts the\n  request and runs the skills below. A whole app from one description → a plan\n  (`docs/plan.md`), the scaffold, every feature, gates, and the app running on mocks; decides\n  instead of asking.\n- `project-setup` — scaffold a new app from this template. Not inside this monorepo: add an app\n  with the recipe in `../../CLAUDE.md`.\n- `feature-development` — ticket → schema, API, queries, form, UI, tests. Loads `api-integration` for\n  endpoints beyond list + create, and `ui-development` when the ticket has a design.\n- `api-integration` — add or change an endpoint: schema, `ApiClient` call, query/mutation, MSW.\n- `ui-development` — a design (screenshot, mockup, Figma, DESIGN.md; asks once if none) → a UI\n  that matches it: tokens, shadcn components, states, tests, visual check.\n\n",
+    "replace": "- `develop` — the entry point (`/web-dev:develop <request>`): detects the project and routes a\n  design or copy change to `ui-development`. A feature, endpoint or sign-in needs an API layer\n  this page does not have: it says so and offers a new web app.\n- `ui-development` — a design (screenshot, mockup, Figma, DESIGN.md; asks once if none) → a UI\n  that matches it: tokens, shadcn components, tests, visual check.\n\n"
+  },
+  {
+    "file": "apps/web/CLAUDE.md",
+    "find": "**Priority when they disagree:** this file and the five project skills, then\n`node_modules/effect/AGENTS.md` and the installed type definitions, then companion skills.\nCompanions are generic: ignore their Next.js / SSR / RSC advice, zod resolvers, Jest,\n`react-router-dom`, raw `fetch` examples and loader-first data fetching.",
+    "replace": "**Priority when they disagree:** this file and the project skills, then the installed type\ndefinitions, then companion skills. Companions are generic: ignore their Next.js / SSR / RSC\nadvice, Jest, `react-router-dom`, raw `fetch` examples and loader-first data fetching."
   }
 ]
