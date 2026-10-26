@@ -29,7 +29,7 @@ const contentSecurityPolicy = (apiUrl: string) =>
 /**
  * Adds the policy as a <meta> tag to the app's own index.html, in builds only: `pnpm dev` needs an
  * inline React Refresh script, and Storybook (which loads this config for its own pages) needs
- * inline scripts too. Headers in netlify.toml would reach the Storybook deploy as well.
+ * inline scripts too. Headers in public/_headers would reach the Storybook deploy as well.
  */
 const cspMetaTag = (): Plugin => {
   let appIndexHtml = '';
@@ -96,7 +96,7 @@ export default defineConfig({
       output: {
         // The libraries change far less often than the app: in chunks of their own, a deploy that
         // touches only app code leaves them cached (assets/* are immutable for a year, see
-        // netlify.toml). One app chunk was 160 kB gzip, almost all of it these libraries.
+        // public/_headers). One app chunk was 160 kB gzip, almost all of it these libraries.
         codeSplitting: {
           groups: [
             {

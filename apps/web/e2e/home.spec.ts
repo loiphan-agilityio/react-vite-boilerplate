@@ -35,7 +35,7 @@ test('runs under its Content-Security-Policy', async ({ page }) => {
 });
 
 // A deep link reaches the app only when the host serves index.html for every path (`vite preview`,
-// and the redirect in netlify.toml); the app then shows its own not-found page.
+// and Cloudflare Pages without a top-level 404.html); the app then shows its own not-found page.
 test('shows the not-found page for an unknown URL', async ({ page }) => {
   await page.goto('/does-not-exist');
   await expect(page.getByText('Page not found')).toBeVisible();

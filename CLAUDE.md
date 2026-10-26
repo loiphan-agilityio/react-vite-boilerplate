@@ -22,7 +22,7 @@ tsconfig.json           types for the root's own TypeScript (oxlint.config.ts), 
                         type-aware lint rules need
 pnpm-workspace.yaml     workspace packages (apps/*, packages/*), pnpm settings, the catalog
 turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
-.github/workflows/ci.yml  CI/CD: gates, e2e, Netlify deploy of apps/web, e2e on it, production
+.github/workflows/ci.yml  CI/CD: gates, e2e, Cloudflare Pages deploy of apps/web, e2e on it, production
 .husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint),
                         pre-push (refuses main, dev, stag, prod and their long names)
 .claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
@@ -47,7 +47,7 @@ From the root, each runs through turbo in every package that has the script:
 | `pnpm build-storybook` | Static Storybook build. |
 | `pnpm test:e2e` | Playwright end-to-end tests on the mocked build (uncached). `pnpm test:e2e:install` downloads Chromium once per machine. |
 | `pnpm check` | All six gates, in two turbo runs: `lint lint:root typecheck test`, then `build build-storybook test:e2e`. Run at once, they starved vitest's workers on an 8 GB laptop ("Failed to start forks worker"), and a failing cheap gate now stops before the builds. `TURBO_FORCE=true pnpm check` reruns cached gates (`--force` would reach the second run only). **Run before calling work done.** |
-| `pnpm lighthouse <url>` | Lighthouse 13.5 (mobile) on a deployed or previewed page (`pnpm build`, then `pnpm --filter web preview`): accessibility under 100 or SEO under 95 fails, performance and best practices warn (`tools/lighthouse.mjs`). Reports in `lighthouse/`. CI runs it on each Netlify draft. |
+| `pnpm lighthouse <url>` | Lighthouse 13.5 (mobile) on a deployed or previewed page (`pnpm build`, then `pnpm --filter web preview`): accessibility under 100 or SEO under 95 fails, performance and best practices warn (`tools/lighthouse.mjs`). Reports in `lighthouse/`. CI runs it on each preview deploy. |
 | `pnpm test:tools` | The tests of `tools/lib/` (what `check:report` and `lighthouse` conclude from their tools' output), and a guard that the anti-slop rules still report after an Oxlint update. Node's test runner; CI's check job runs them. |
 | `pnpm check:report` | The gates of `pnpm check` one after another, going on after a failure, then the output checklist: each gate pass/fail, the unit and e2e pass rates (%), line coverage and times (`tools/check-report.mjs`; `--only` / `--skip` pick gates). Markdown on stdout and in CI's run summary, JSON in `check-report.json`. |
 
@@ -136,32 +136,37 @@ since the lockfile is at the root. `apps/web` must keep all of these.
 
 1. **check** (lint, typecheck, unit tests with coverage, build, Storybook build) and **e2e**
    (`pnpm test:e2e` on the mock build) in parallel.
-2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to Netlify
-   as a draft (`pr-<number>--<site>` on a pull request), without building them again. It runs
-   `netlify deploy --filter web --dir apps/web/dist` from the root (Netlify's monorepo mode), and
-   `apps/web/netlify.toml` holds the redirects and headers. Each draft also sends
-   `X-Robots-Tag: noindex` (a `_headers` file the job adds to its copy), so a leaked draft URL
-   stays out of search results; production is deployed without it.
-3. **e2e-deployed**: the same Playwright specs against the draft URL, and **lighthouse**:
+2. **deploy-draft**: the mock build **e2e** tested and the Storybook **check** built go to
+   Cloudflare Pages as a preview (`pr-<number>.<project>.pages.dev` on a pull request, branch
+   `main-draft` on a push to `main`), without building them again, with
+   `wrangler pages deploy apps/web/dist`. `apps/web/public/_headers` (copied into both builds)
+   holds the headers; Pages serves `index.html` for any path that is not a file, and
+   `apps/web/public/assets/404.html` makes a missing chunk a 404 instead (never add a top-level
+   `404.html`: it turns that fallback off). Each preview also sends `X-Robots-Tag: noindex` (rules
+   the job appends to its copy of `_headers`), so a leaked preview URL stays out of search
+   results; production is deployed without it.
+3. **e2e-deployed**: the same Playwright specs against the preview URL, and **lighthouse**:
    `tools/lighthouse.mjs` on it (mobile; accessibility 100 and SEO 95 or more required,
    performance and best practices reported), its scores in the run summary.
-4. **deploy-production** (push to `main`): the same files go live, only after the deployed e2e
-   and Lighthouse passed.
+4. **deploy-production** (push to `main`): the same files go live (a deploy to the project's
+   production branch, `main`), only after the deployed e2e and Lighthouse passed.
 
 GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
-`Checks: lint, typecheck, unit, build`, `E2E: Run testing on mock API`, `Deploy: Netlify draft`,
-`E2E: deployed preview`, `Lighthouse: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
+`Checks: lint, typecheck, unit, build`, `E2E: Run testing on mock API`, `Deploy: preview`,
+`E2E: deployed preview`, `Lighthouse: deployed preview`, `Deploy: production`. `needs:` and `if:` use the job ids above.
 A required status check in branch protection matches that name, so after renaming a job, select
 it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
 `Prod - Webapp Deployment`, whose Details link in the checks list opens the deploy (a job's own
 Details link opens its log).
 
-Setup, once per repository: create the Netlify site(s), then in the GitHub repository set the
-secret `NETLIFY_AUTH_TOKEN` and the variable `NETLIFY_SITE_ID` (`NETLIFY_STORYBOOK_SITE_ID` for
-a Storybook site). Without `NETLIFY_SITE_ID` the deploy jobs are skipped. Once the app has a
-backend, set `VITE_API_URL` on the `pnpm build` step of **check**, upload `apps/web/dist/` from
-there as the `app` artifact instead of the one **e2e** uploads, and switch `build:mock` to
-`build` in `apps/web/netlify.toml`.
+Setup, once per repository: create the Pages project(s) with
+`npx wrangler pages project create <name> --production-branch main`, then in the GitHub
+repository set the secret `CLOUDFLARE_API_TOKEN` (permission Cloudflare Pages: Edit) and the
+variables `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_PAGES_APP_PROJECT`
+(`CLOUDFLARE_PAGES_STORYBOOK_PROJECT` for a Storybook site). Without
+`CLOUDFLARE_PAGES_APP_PROJECT` the deploy jobs are skipped. Once the app has a
+backend, set `VITE_API_URL` on the `pnpm build` step of **check**, and upload `apps/web/dist/`
+from there as the `app` artifact instead of the one **e2e** uploads.
 
 The **e2e** job builds an Allure 3 report (`apps/web/allurerc.ts`; its history carried in the
 Actions cache). With the variable `CLOUDFLARE_PAGES_PROJECT` set (plus `CLOUDFLARE_ACCOUNT_ID` and
@@ -169,7 +174,7 @@ the secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), it publis
 Pages, and uploads it as an artifact only when it cannot go there (a fork's or Dependabot's pull
 request, or a failed deploy): `pr-<number>.<project>.pages.dev` on a pull request,
 `<project>.pages.dev` for `main`, linked from the commit status `E2E report`. **e2e-deployed** has
-no report: it checks what Netlify serves, and its result is the job's log. Create the project once:
+no report: it checks what Pages serves, and its result is the job's log. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
 The **check** job publishes the unit tests' coverage report (Vitest's HTML, `apps/web/coverage/`)
@@ -199,11 +204,8 @@ new project still runs as a demo until these are done:
   (a skipped deploy job, as on a Dependabot pull request, counts as passed). A repository admin
   applies it once: `gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/main.json`
   (or Settings > Rules > Rulesets > Import). After renaming a job, update its name there.
-- **Netlify toolbar:** Netlify can inject its collaboration toolbar (a script from
-  `/.netlify/scripts/hud`), seen on this boilerplate's own live site; the
-  Content-Security-Policy blocks it, and Lighthouse's Best Practices loses points for the console
-  error. Turn the toolbar off in the site's Netlify settings (its Deploy Previews section) rather
-  than loosening `script-src`.
+- **Custom domain:** the app is served at `<project>.pages.dev`; add a domain under the Pages
+  project's Custom domains.
 
 ## Package roadmap
 

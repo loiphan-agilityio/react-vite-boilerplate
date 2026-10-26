@@ -2,8 +2,8 @@
 
 Single-page app: React 19, Vite 8, TypeScript 6 (strict), Effect 4, TanStack Query 5,
 React Hook Form 7, shadcn/ui on Tailwind CSS 4, React Router 8. Tests: Vitest 5, React Testing
-Library, MSW 3; end-to-end: Playwright. Deployed to Netlify (`netlify.toml`) by the monorepo's
-CI/CD (`../../CLAUDE.md`). Package manager: pnpm. No SSR, no Next.js.
+Library, MSW 3; end-to-end: Playwright. Deployed to Cloudflare Pages (`public/_headers`) by the
+monorepo's CI/CD (`../../CLAUDE.md`). Package manager: pnpm. No SSR, no Next.js.
 
 This app (package `web`) is part of a pnpm + Turborepo monorepo (see `../../CLAUDE.md`): run the
 commands below from `apps/web`; the root `pnpm check` runs every package through turbo.
@@ -59,7 +59,7 @@ src/
 e2e/                Playwright specs: home.spec.ts, then <feature>.spec.ts per feature
 playwright.config.ts  the e2e runner: mock build + `vite preview`, or E2E_BASE_URL
 allurerc.ts         the Allure 3 report of the e2e run (results in test-results/allure)
-netlify.toml        Netlify: SPA redirect, cache headers, build command for git-based builds
+public/_headers     Cloudflare Pages headers; public/assets/404.html makes a missing chunk 404
 ```
 
 The UI kit lives in `packages/ui` (`@repo/ui`): shadcn components in `packages/ui/src/components`
@@ -166,8 +166,8 @@ ApiClient → effect/http`
   data a backend would hold.
 - Query by role and label (`page.getByRole`, `page.getByLabel`) and assert with web-first
   `await expect(locator).toBeVisible()`; never `waitForTimeout`.
-- The same specs run in CI against the Netlify deploy (`E2E_BASE_URL`), so a spec never assumes
-  localhost or a port.
+- The same specs run in CI against the Cloudflare Pages preview (`E2E_BASE_URL`), so a spec
+  never assumes localhost or a port.
 
 ## Stories
 
