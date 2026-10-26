@@ -88,6 +88,8 @@ describe('create-react-vite-turbo', () => {
     for (const dir of [auth, plain]) {
       assert.ok(!existsSync(join(dir, 'create')));
       assert.ok(!read(dir, 'CLAUDE.md').includes('template-only'));
+      assert.ok(!read(dir, 'README.md').includes('template-only'));
+      assert.ok(!read(dir, 'README.md').includes('pages.dev'));
     }
   });
 
@@ -111,7 +113,7 @@ describe('create-react-vite-turbo', () => {
 
   it('names the project after its folder', () => {
     assert.equal(JSON.parse(read(plain, 'package.json')).name, 'plain');
-    assert.ok(read(plain, 'README.md').startsWith('# plain\n'));
+    assert.ok(read(plain, 'README.md').startsWith('<h1 align="center">plain</h1>\n'));
     assert.ok(read(plain, 'CLAUDE.md').startsWith('# plain (monorepo)\n'));
     assert.ok(read(plain, 'apps/web/index.html').includes('<title>plain</title>'));
     assert.equal(JSON.parse(read(plain, 'apps/web/public/site.webmanifest')).short_name, 'plain');
@@ -122,7 +124,7 @@ describe('create-react-vite-turbo', () => {
     const { status, stderr } = run(out, '--from', repo, '--no-auth', '--name', 'My Shop!');
     assert.equal(status, 0, stderr);
     assert.equal(JSON.parse(read(out, 'package.json')).name, 'my-shop');
-    assert.ok(read(out, 'README.md').startsWith('# my-shop\n'));
+    assert.ok(read(out, 'README.md').startsWith('<h1 align="center">my-shop</h1>\n'));
   });
 
   it('without auth, gives the base project', () => {

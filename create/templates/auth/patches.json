@@ -56,8 +56,8 @@
   },
   {
     "file": "README.md",
-    "find": "## Check",
-    "replace": "## Sign in\n\nWith `pnpm dev:mock`, sign in with `demo@example.com` / `password` (the login page shows it too);\nany other email or password is rejected. With `pnpm dev`, use an account of your real backend.\nThe mock API is `apps/web/src/features/auth/mocks.ts`.\n\n## Check"
+    "find": "## ✅ Check",
+    "replace": "## 🔐 Sign in\n\nWith `pnpm dev:mock`, sign in with `demo@example.com` / `password` (the login page shows it too);\nany other email or password is rejected. With `pnpm dev`, use an account of your real backend.\nThe mock API is `apps/web/src/features/auth/mocks.ts`.\n\n## ✅ Check"
   },
   {
     "file": "apps/web/CLAUDE.md",

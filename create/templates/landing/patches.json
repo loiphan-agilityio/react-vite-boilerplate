@@ -348,5 +348,15 @@
     "file": "apps/web/CLAUDE.md",
     "find": "**Priority when they disagree:** this file and the five project skills, then\n`node_modules/effect/AGENTS.md` and the installed type definitions, then companion skills.\nCompanions are generic: ignore their Next.js / SSR / RSC advice, zod resolvers, Jest,\n`react-router-dom`, raw `fetch` examples and loader-first data fetching.",
     "replace": "**Priority when they disagree:** this file and the project skills, then the installed type\ndefinitions, then companion skills. Companions are generic: ignore their Next.js / SSR / RSC\nadvice, Jest, `react-router-dom`, raw `fetch` examples and loader-first data fetching."
+  },
+  {
+    "file": "README.md",
+    "find": "| 🔌 | **Data** | Effect 4 (typed HTTP client `ApiClient`, config and errors), TanStack Query 5 (server state), React Hook Form 7 with Effect Schema validation. Every request goes through `ApiClient`; lint rejects `fetch` and `axios`. |\n| 🎭 | **API mocks** | MSW 3, one set of handlers for the dev server, the tests and the stories, so the app runs with no backend. |\n",
+    "replace": "| 🏠 | **Landing page** | One public marketing page, no API layer. |\n"
+  },
+  {
+    "file": "README.md",
+    "find": "> [!IMPORTANT]\n> `VITE_API_URL` is the backend's base URL and `VITE_API_MOCKING=true` turns the mocks on (`pnpm dev:mock` sets it from `apps/web/.env.mock`). Every `VITE_*` value is public: it ends up in the bundle, so never put a secret there.\n\n",
+    "replace": ""
   }
 ]
