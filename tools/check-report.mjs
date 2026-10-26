@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // pnpm check:report: runs the gates of pnpm check one after another, keeps going after a failure,
-// and prints the output checklist: lint (ESLint, Prettier, anti-slop), typecheck, unit tests with
+// and prints the output checklist: lint (Oxlint with anti-slop, Prettier), typecheck, unit tests with
 // their pass rate and line coverage, build, Storybook build, and e2e with its pass rate.
 //
 //   node tools/check-report.mjs [--only <gate,...>] [--skip <gate,...>]
@@ -44,7 +44,7 @@ const quote = (/** @type {string} */ path) => JSON.stringify(path);
 const readJson = (path) => (existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : undefined);
 
 const gates = [
-  { id: 'lint', name: 'Lint (ESLint, Prettier, anti-slop)', command: 'pnpm lint' },
+  { id: 'lint', name: 'Lint (Oxlint, Prettier)', command: 'pnpm lint' },
   { id: 'typecheck', name: 'Typecheck', command: 'pnpm typecheck' },
   {
     id: 'unit',

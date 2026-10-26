@@ -70,11 +70,9 @@ jobs:
       - name: Test the repo's tools
         run: pnpm test:tools
       # The generator exists only in the boilerplate: a project created from it has no create/.
-      - name: Lint and test the project generator
+      - name: Test the project generator
         if: ${{ hashFiles('create/index.test.js') != '' }}
-        run: |
-          pnpm exec eslint --max-warnings=0 create
-          node --test create/index.test.js
+        run: node --test create/index.test.js
       # The deploy jobs publish this Storybook build instead of building it again.
       - uses: actions/upload-artifact@v7
         if: ${{ vars.NETLIFY_STORYBOOK_SITE_ID != '' }}
