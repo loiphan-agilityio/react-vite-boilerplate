@@ -168,6 +168,12 @@ request, or a failed deploy): `pr-<number>.<project>.pages.dev` on a pull reques
 no report: it checks what Netlify serves, and its result is the job's log. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
+The **check** job publishes the unit tests' coverage report (Vitest's HTML, `apps/web/coverage/`)
+the same way, on a second Pages project named by the variable `CLOUDFLARE_PAGES_UT_PROJECT` (same
+account and token; a project of its own, since a project has one `main` deploy), linked from the
+commit status `Unit coverage report`; the `coverage` artifact only when it cannot go there. Vitest
+writes no report when a test fails.
+
 ### Before real users
 
 What ships is production-shaped (security headers and a Content-Security-Policy, hashed assets
