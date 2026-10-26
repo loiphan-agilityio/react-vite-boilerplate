@@ -24,6 +24,7 @@
 # Pages > Edit) and the CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_PAGES_PROJECT variables. Create the
 # project once: `npx wrangler pages project create <name> --production-branch main`. Without
 # CLOUDFLARE_PAGES_PROJECT, or on a fork's or Dependabot's pull request, it is an artifact instead.
+# The check job's coverage report does the same on a second project, CLOUDFLARE_PAGES_UT_PROJECT.
 name: CI
 
 on:
@@ -53,6 +54,9 @@ jobs:
   check:
     name: 'Checks: lint, typecheck, unit, build'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@v7
       # pnpm's version comes from packageManager in package.json.
@@ -80,8 +84,42 @@ jobs:
           name: storybook
           path: apps/web/storybook-static/
           retention-days: 7
+      # Publishes the unit tests' coverage report (Vitest's HTML) on a Cloudflare Pages project of
+      # its own, so its main deploy does not replace the Allure report's: pr-<number>.<project>
+      # .pages.dev on a pull request, <project>.pages.dev for main. Vitest writes no report when a
+      # test fails.
+      - name: Deploy the coverage report
+        id: coverage
+        if: >-
+          !cancelled() && vars.CLOUDFLARE_PAGES_UT_PROJECT != '' &&
+          hashFiles('apps/web/coverage/index.html') != '' &&
+          github.actor != 'dependabot[bot]' &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PROJECT: ${{ vars.CLOUDFLARE_PAGES_UT_PROJECT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler.ndjson
+        run: |
+          branch="${PR_NUMBER:+pr-$PR_NUMBER}"
+          branch="${branch:-$GITHUB_REF_NAME}"
+          printf '/*\n  X-Robots-Tag: noindex\n' > apps/web/coverage/_headers
+          npx -y "$WRANGLER" pages deploy apps/web/coverage --project-name "$PROJECT" \
+            --branch "$branch" --commit-hash "$SHA"
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
+            "$WRANGLER_OUTPUT_FILE_PATH")"
+          [[ "$url" == https://* ]]
+          echo "Coverage report: $url" >> "$GITHUB_STEP_SUMMARY"
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
+            -f context='Unit coverage report' -f target_url="$url" \
+            -f description='Unit test coverage'
+      # An artifact only when the report did not reach Cloudflare Pages.
       - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.coverage.outcome != 'success' }}
         with:
           name: coverage
           path: apps/web/coverage/
