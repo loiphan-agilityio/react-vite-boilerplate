@@ -90,7 +90,7 @@ jobs:
           retention-days: 14
 
   e2e:
-    name: 'E2E: mock build'
+    name: 'E2E: mock API (CI runner)'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -162,7 +162,7 @@ jobs:
           [[ "$url" == https://* ]]
           echo "Allure report: $url" >> "$GITHUB_STEP_SUMMARY"
           gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
-            -f context='Allure report - mock build' -f target_url="$url" \
+            -f context='E2E report: mock API' -f target_url="$url" \
             -f description="E2E $JOB_STATUS"
       # An artifact only when the report did not reach Cloudflare Pages (a fork's or Dependabot's
       # pull request, no CLOUDFLARE_PAGES_PROJECT, or a failed deploy).
@@ -245,7 +245,7 @@ jobs:
           echo "Storybook: $url" >> "$GITHUB_STEP_SUMMARY"
 
   e2e-deployed:
-    name: 'E2E: Netlify draft'
+    name: 'E2E: deployed preview'
     needs: deploy-draft
     runs-on: ubuntu-latest
     permissions:
@@ -308,7 +308,7 @@ jobs:
           [[ "$url" == https://* ]]
           echo "Allure report: $url" >> "$GITHUB_STEP_SUMMARY"
           gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
-            -f context='Allure report - Netlify draft' -f target_url="$url" \
+            -f context='E2E report: deployed preview' -f target_url="$url" \
             -f description="E2E $JOB_STATUS"
       # An artifact only when the report did not reach Cloudflare Pages (a fork's or Dependabot's
       # pull request, no CLOUDFLARE_PAGES_PROJECT, or a failed deploy).

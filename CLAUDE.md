@@ -145,8 +145,8 @@ since the lockfile is at the root. `apps/web` must keep all of these.
    and Lighthouse passed.
 
 GitHub lists each check as `CI / <name> (<event>)`, from the job's `name:`:
-`Checks: lint, typecheck, unit, build`, `E2E: mock build`, `Deploy: Netlify draft`,
-`E2E: Netlify draft`, `Lighthouse: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
+`Checks: lint, typecheck, unit, build`, `E2E: mock API (CI runner)`, `Deploy: Netlify draft`,
+`E2E: deployed preview`, `Lighthouse: Netlify draft`, `Deploy: Netlify production`. `needs:` and `if:` use the job ids above.
 A required status check in branch protection matches that name, so after renaming a job, select
 it again there. The two deploy jobs add a commit status, `Preview - Webapp Deployment` and
 `Prod - Webapp Deployment`, whose Details link in the checks list opens the deploy (a job's own
@@ -165,7 +165,7 @@ secret `CLOUDFLARE_API_TOKEN`, permission Cloudflare Pages: Edit), they publish 
 Pages, and upload it as an artifact only when it cannot go there (a fork's or Dependabot's pull
 request, or a failed deploy): `pr-<number>.<project>.pages.dev` (`-deployed` for the
 draft's run), `<project>.pages.dev` for `main`, linked from the commit statuses
-`Allure report - mock build` and `Allure report - Netlify draft`. Create the project once:
+`E2E report: mock API` and `E2E report: deployed preview`. Create the project once:
 `npx wrangler pages project create <name> --production-branch main`.
 
 ### Before real users
