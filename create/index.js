@@ -116,15 +116,14 @@ const toPackageName = (name) =>
     .replace(/[^a-z0-9._-]+/g, '-')
     .replace(/^[._-]+|-+$/g, '') || 'app';
 
-/** Names the project after itself instead of `boilerplate`; a file the tree lacks is skipped. */
+/**
+ * Names the project after itself instead of `boilerplate`; a file the tree lacks is skipped. The
+ * README's title is whatever the template calls itself, so any centered `<h1>` is replaced.
+ */
 const nameProject = async (dest, name) => {
   const renames = [
     ['package.json', /^ {2}"name": "boilerplate",$/m, `  "name": "${name}",`],
-    [
-      'README.md',
-      /^<h1 align="center">boireact-vite-boilerplatelerplate<\/h1>$/m,
-      `<h1 align="center">${name}</h1>`,
-    ],
+    ['README.md', /^<h1 align="center">[^<]*<\/h1>$/m, `<h1 align="center">${name}</h1>`],
     ['CLAUDE.md', /^# boilerplate \(monorepo\)$/m, `# ${name} (monorepo)`],
     ['apps/web/index.html', /<title>Boilerplate<\/title>/, `<title>${name}</title>`],
     ['apps/web/public/site.webmanifest', /"name": "Boilerplate"/, `"name": "${name}"`],
