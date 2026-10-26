@@ -6,9 +6,10 @@
 # - e2e: the Playwright tests against the app built on the mocked API (`pnpm build:mock`).
 # - deploy-draft: once both pass, the app and Storybook they built go to Netlify as a draft:
 #   `pr-<number>--<site>` on a pull request, a unique draft URL on a push to main.
-# - e2e-deployed: the same Playwright tests against that deploy URL.
-#   Both e2e jobs publish an Allure 3 report on Cloudflare Pages (CLOUDFLARE_PAGES_PROJECT), or
-#   upload it as an artifact when it cannot go there (a single index.html: download, unzip, open).
+# - e2e-deployed: the same Playwright tests against that deploy URL: it checks what Netlify serves
+#   (netlify.toml), and has no report of its own (its result is the job's log and annotations).
+#   The e2e job publishes an Allure 3 report on Cloudflare Pages (CLOUDFLARE_PAGES_PROJECT), or
+#   uploads it as an artifact when it cannot go there (a single index.html: download, unzip, open).
 # - lighthouse: Lighthouse (mobile) on that deploy URL; accessibility under 100 or SEO under 95
 #   fails it, performance and best practices only warn (tools/lighthouse.mjs).
 # - deploy-production (push to main only): once both pass, the same files go live.
@@ -90,7 +91,7 @@ jobs:
           retention-days: 14
 
   e2e:
-    name: 'E2E: mock API (CI runner)'
+    name: 'E2E: Run testing on mock API'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -162,7 +163,7 @@ jobs:
           [[ "$url" == https://* ]]
           echo "Allure report: $url" >> "$GITHUB_STEP_SUMMARY"
           gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
-            -f context='E2E report: mock API' -f target_url="$url" \
+            -f context='E2E report' -f target_url="$url" \
             -f description="E2E $JOB_STATUS"
       # An artifact only when the report did not reach Cloudflare Pages (a fork's or Dependabot's
       # pull request, no CLOUDFLARE_PAGES_PROJECT, or a failed deploy).
@@ -250,7 +251,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      statuses: write
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -260,65 +260,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web exec playwright install --with-deps chromium
-      - uses: actions/cache/restore@v5
-        with:
-          path: apps/web/allure-history.jsonl
-          key: allure-history-deployed-${{ github.run_id }}
-          restore-keys: allure-history-deployed-
       # With E2E_BASE_URL set, Playwright starts no server and tests the deploy itself.
       - run: pnpm test:e2e
         env:
           E2E_BASE_URL: ${{ needs.deploy-draft.outputs.url }}
-      # Allure 3 report (apps/web/allurerc.ts), on a pass or a failure. Its history (trends, flaky
-      # tests) lives in the Actions cache: a new entry per run; a pull request starts from main's.
-      - name: Allure report
-        if: ${{ !cancelled() }}
-        run: pnpm --filter web exec allure generate
-      - uses: actions/cache/save@v5
-        if: ${{ !cancelled() }}
-        with:
-          path: apps/web/allure-history.jsonl
-          key: allure-history-deployed-${{ github.run_id }}-${{ github.run_attempt }}
-      # The same Cloudflare Pages project as e2e's report, on its own branch alias:
-      # pr-<number>-deployed.<project>.pages.dev, main-deployed.<project>.pages.dev for main.
-      - name: Deploy the Allure report
-        id: report
-        if: >-
-          !cancelled() && vars.CLOUDFLARE_PAGES_PROJECT != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          JOB_STATUS: ${{ job.status }}
-          GH_TOKEN: ${{ github.token }}
-          # Wrangler writes its result here as ndjson, the deploy's URLs included.
-          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler.ndjson
-        run: |
-          branch="${PR_NUMBER:+pr-$PR_NUMBER}"
-          branch="${branch:-$GITHUB_REF_NAME}-deployed"
-          # A report must stay out of search results, on preview and production URLs alike.
-          printf '/*\n  X-Robots-Tag: noindex\n' > apps/web/allure-report/_headers
-          npx -y "$WRANGLER" pages deploy apps/web/allure-report --project-name "$PROJECT" \
-            --branch "$branch" --commit-hash "$SHA"
-          # The branch alias stays the same from run to run; the hash URL is this deploy only.
-          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .alias // .url' \
-            "$WRANGLER_OUTPUT_FILE_PATH")"
-          [[ "$url" == https://* ]]
-          echo "Allure report: $url" >> "$GITHUB_STEP_SUMMARY"
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success \
-            -f context='E2E report: deployed preview' -f target_url="$url" \
-            -f description="E2E $JOB_STATUS"
-      # An artifact only when the report did not reach Cloudflare Pages (a fork's or Dependabot's
-      # pull request, no CLOUDFLARE_PAGES_PROJECT, or a failed deploy).
-      - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() && steps.report.outcome != 'success' }}
-        with:
-          name: allure-report-deployed
-          path: apps/web/allure-report/
-          if-no-files-found: ignore
-          retention-days: 14
 
   lighthouse:
     name: 'Lighthouse: Netlify draft'
