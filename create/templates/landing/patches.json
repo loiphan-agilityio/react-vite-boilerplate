@@ -96,8 +96,8 @@
   },
   {
     "file": "apps/web/package.json",
-    "find": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"dev:mock\": \"vite --mode mock\",\n    \"build\": \"tsc -b && vite build\",\n    \"build:mock\": \"tsc -b && vite build --mode mock\",\n    \"preview\": \"vite preview\",\n    \"postinstall\": \"msw init\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"eslint . --max-warnings=0 && oxlint -c ../../oxlint.config.ts . && prettier --check .\",\n",
-    "replace": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc -b && vite build\",\n    \"preview\": \"vite preview\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"eslint . --max-warnings=0 && oxlint -c ../../oxlint.config.ts . && prettier --check .\",\n"
+    "find": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"dev:mock\": \"vite --mode mock\",\n    \"build\": \"tsc -b && vite build\",\n    \"build:mock\": \"tsc -b && vite build --mode mock\",\n    \"preview\": \"vite preview\",\n    \"postinstall\": \"msw init\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"oxlint -c ../../oxlint.config.ts --type-aware --deny-warnings . && prettier --check .\",\n",
+    "replace": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc -b && vite build\",\n    \"preview\": \"vite preview\",\n    \"typecheck\": \"tsc -b\",\n    \"lint\": \"oxlint -c ../../oxlint.config.ts --type-aware --deny-warnings . && prettier --check .\",\n"
   },
   {
     "file": "apps/web/package.json",
@@ -106,8 +106,8 @@
   },
   {
     "file": "apps/web/package.json",
-    "find": "    \"eslint\": \"catalog:\",\n    \"jsdom\": \"^30.1.3\",\n    \"msw\": \"^3.0.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n",
-    "replace": "    \"eslint\": \"catalog:\",\n    \"jsdom\": \"^30.1.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n"
+    "find": "    \"jsdom\": \"^30.1.3\",\n    \"msw\": \"^3.0.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n",
+    "replace": "    \"jsdom\": \"^30.1.3\",\n    \"prettier\": \"catalog:\",\n    \"shadcn\": \"catalog:\",\n"
   },
   {
     "file": "apps/web/package.json",

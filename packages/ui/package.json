@@ -10,8 +10,8 @@
     "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
-    "lint": "eslint . --max-warnings=0 && prettier --check .",
-    "lint:fix": "eslint . --max-warnings=0 --fix && prettier --write .",
+    "lint": "oxlint -c ../../oxlint.config.ts --type-aware --deny-warnings . && prettier --check .",
+    "lint:fix": "oxlint -c ../../oxlint.config.ts --type-aware --fix . && prettier --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -30,11 +30,9 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

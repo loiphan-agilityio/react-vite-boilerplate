@@ -10,9 +10,7 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     ignore:
-      # TypeScript 7: typescript-eslint (8.72) supports TypeScript <6.1 only, so lint fails, and
-      # web-dev's guidelines pin 6. Drop this once typescript-eslint supports 7
-      # (https://github.com/typescript-eslint/typescript-eslint/issues/10940).
+      # TypeScript 7: web-dev's guidelines pin 6. Drop this once they move to 7.
       - dependency-name: typescript
         update-types: [version-update:semver-major]
     groups:

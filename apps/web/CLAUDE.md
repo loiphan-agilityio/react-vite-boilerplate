@@ -13,7 +13,7 @@ commands below from `apps/web`; the root `pnpm check` runs every package through
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Dev server. `pnpm dev:mock` (Vite mode `mock`, reads `.env.mock`) serves the API from `src/mocks` (MSW), in any shell. |
-| `pnpm lint` | ESLint (`--max-warnings=0`, also enforces the import rules below) and `prettier --check`. `pnpm lint:fix` fixes what it can and formats; run it before `pnpm check`. |
+| `pnpm lint` | Oxlint (the root `oxlint.config.ts`, type-aware, `--deny-warnings`; also enforces the import rules below and anti-slop) and `prettier --check`. `pnpm lint:fix` fixes what it can and formats; run it before `pnpm check`. |
 | `pnpm typecheck` | `tsc -b` |
 | `pnpm test` | Vitest once, with coverage (≥ 80% lines in `src/features` and `src/lib`). `pnpm test:watch` to watch. |
 | `pnpm test:e2e` | Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`; with `E2E_BASE_URL` set, tests that URL instead. `pnpm test:e2e:install` downloads Chromium once per machine. `pnpm test:e2e:report` builds the Allure 3 report of the last run (`allurerc.ts`, into `allure-report/`) and opens it. |
@@ -82,8 +82,7 @@ Lint enforces it, and `func-style` has no autofix, so write it this way from the
   `onClick={() => setOpen(true)}` (`no-confusing-void-expression`).
 - Inline type imports (`import { type Item, NewItem } from './schemas'`); `pnpm lint:fix`
   fixes most of the rest and formats.
-- anti-slop (part of `pnpm lint` here and at the root; `pnpm lint:slop` at the root runs it
-  alone) rejects low-evidence code: a type assertion
+- anti-slop (part of `pnpm lint`) rejects low-evidence code: a type assertion
   without a `// SAFETY:` comment on the invariant, `as unknown as`, `unknown` or `object` in a
   function's parameters or return type (parse at the boundary instead; a catch argument is named
   `cause`), `typeof` narrowing outside a parser, `vi.mock` of a module, comparing or building
@@ -180,7 +179,7 @@ ApiClient → effect/http`
 
 - Messages follow Conventional Commits: `type(scope): summary` (`feat`, `fix`, `docs`, `refactor`,
   `test`, `chore`...). The `commit-msg` hook rejects anything else (commitlint).
-- The `pre-commit` hook runs ESLint and Prettier on the staged files (lint-staged), then
+- The `pre-commit` hook runs Oxlint and Prettier on the staged files (lint-staged), then
   `pnpm typecheck`. Fix what it reports; never commit with `--no-verify`.
 - The hooks are installed by husky, the root `prepare` script, which `pnpm install` runs inside a git
   repository. After a `git init` in a project already installed, run `pnpm run prepare` to turn them
