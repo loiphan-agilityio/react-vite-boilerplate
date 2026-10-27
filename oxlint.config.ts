@@ -454,5 +454,14 @@ export default defineConfig({
         ],
       },
     },
+    {
+      files: ['packages/ui/.storybook/main.ts'],
+      rules: {
+        'storybook/no-uninstalled-addons': [
+          'error',
+          { packageJsonLocation: join(import.meta.dirname, 'packages/ui/package.json') },
+        ],
+      },
+    },
   ],
 });

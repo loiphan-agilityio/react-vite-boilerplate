@@ -6,6 +6,15 @@ settings:
 
 catalogs:
   default:
+    '@storybook/addon-a11y':
+      specifier: ^10.6.3
+      version: 10.6.3
+    '@storybook/react-vite':
+      specifier: ^10.6.3
+      version: 10.6.3
+    '@tailwindcss/vite':
+      specifier: ^4.3.3
+      version: 4.3.3
     '@types/node':
       specifier: ^26.6.5
       version: 26.6.5
@@ -33,12 +42,18 @@ catalogs:
     sonner:
       specifier: ^2.0.8
       version: 2.0.8
+    storybook:
+      specifier: ^10.6.3
+      version: 10.6.3
     tailwindcss:
       specifier: ^4.3.3
       version: 4.3.3
     typescript:
       specifier: ~6.0.3
       version: 6.0.3
+    vite:
+      specifier: ^8.3.5
+      version: 8.3.5
 
 overrides:
   fast-uri: ^3.1.9
@@ -121,17 +136,20 @@ importers:
       '@playwright/test':
         specifier: ^1.64.1
         version: 1.64.1
+      '@repo/storybook-config':
+        specifier: workspace:*
+        version: link:../../packages/storybook-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@storybook/addon-a11y':
-        specifier: ^10.6.3
+        specifier: 'catalog:'
         version: 10.6.3(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))
       '@storybook/react-vite':
-        specifier: ^10.6.3
+        specifier: 'catalog:'
         version: 10.6.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(supports-color@7.2.0)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@testing-library/dom':
         specifier: ^10.4.2
@@ -179,7 +197,7 @@ importers:
         specifier: 'catalog:'
         version: 4.22.1(supports-color@7.2.0)
       storybook:
-        specifier: ^10.6.3
+        specifier: 'catalog:'
         version: 10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1)
       tailwindcss:
         specifier: 'catalog:'
@@ -188,11 +206,26 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
       vite:
-        specifier: ^8.3.5
+        specifier: 'catalog:'
         version: 8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@26.6.5)(@vitest/coverage-v8@5.0.5)(jsdom@30.1.3)(msw@3.0.3(@types/node@26.6.5)(supports-color@7.2.0)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/storybook-config:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(supports-color@7.2.0)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.10
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/typescript-config:
     devDependencies:
@@ -230,9 +263,21 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
     devDependencies:
+      '@repo/storybook-config':
+        specifier: workspace:*
+        version: link:../storybook-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@storybook/addon-a11y':
+        specifier: 'catalog:'
+        version: 10.6.3(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(storybook@10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(supports-color@7.2.0)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      '@tailwindcss/vite':
+        specifier: 'catalog:'
+        version: 4.3.3(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -251,9 +296,15 @@ importers:
       shadcn:
         specifier: 'catalog:'
         version: 4.22.1(supports-color@7.2.0)
+      storybook:
+        specifier: 'catalog:'
+        version: 10.6.3(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
 packages:
 
@@ -7048,7 +7099,7 @@ snapshots:
       fuzzysort: 3.1.0
       kleur: 4.1.5
       ora: 8.2.0
-      postcss: 8.5.30
+      postcss: 8.5.31
       prompts: 2.4.2
       recast: 0.23.21
       socks: 2.8.10

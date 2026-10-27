@@ -5,5 +5,5 @@
       "@repo/ui/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", ".storybook"]
 }
