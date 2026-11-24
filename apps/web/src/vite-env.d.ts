@@ -1,4 +1,4 @@
-// The `VITE_*` values the app reads (src/lib/config.ts). `vite/client` (tsconfig `types`) merges
+// The `VITE_*` values the app reads (src/app/config.ts). `vite/client` (tsconfig `types`) merges
 // this into `import.meta.env`.
 interface ImportMetaEnv {
   /** Base URL of the backend API, e.g. `https://api.example.com`. Defaults to `/api`. */

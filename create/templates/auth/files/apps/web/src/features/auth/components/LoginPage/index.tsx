@@ -13,9 +13,9 @@ import { Input } from '@repo/ui/components/input';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { UnauthorizedError } from '@/lib/api/errors';
-import { config } from '@/lib/config';
-import { setFormErrors } from '@/lib/forms';
+import { UnauthorizedError } from '@/api/errors';
+import { config } from '@/app/config';
+import { setFormErrors } from '@/utils/form-errors';
 
 import { safeRedirect } from '../../model';
 import { useSignIn } from '../../queries';

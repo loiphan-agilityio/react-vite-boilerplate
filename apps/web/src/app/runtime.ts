@@ -1,8 +1,8 @@
 import { Layer, ManagedRuntime } from 'effect';
 
-import { AuthToken } from '@/lib/api/auth';
-import { ApiClient } from '@/lib/api/client';
-import { AppConfig } from '@/lib/config';
+import { AuthToken } from '@/api/auth';
+import { ApiClient } from '@/api/client';
+import { AppConfig } from '@/app/config';
 
 /**
  * Every service the app's effects may use. Add new service layers here with `Layer.mergeAll`.

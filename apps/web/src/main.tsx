@@ -7,9 +7,9 @@ import { RouterProvider } from 'react-router/dom';
 
 import { AppProviders } from '@/app/providers';
 import { createRoutes } from '@/app/routes';
-import { config } from '@/lib/config';
-import { reportRouteError } from '@/lib/report-error';
-import { reloadOnStaleChunk } from '@/lib/stale-chunk';
+import { config } from '@/app/config';
+import { reportRouteError } from '@/utils/report-error';
+import { reloadOnStaleChunk } from '@/app/stale-chunk';
 
 // A lazy route whose chunk is gone after a deploy reloads the tab once (see stale-chunk.ts).
 window.addEventListener('vite:preloadError', reloadOnStaleChunk());

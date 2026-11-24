@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw/http';
 import { delay } from 'msw/utils/delay';
 
-import { config } from '@/lib/config';
+import { config } from '@/app/config';
 
 import type { Credentials, User } from './schemas';
 

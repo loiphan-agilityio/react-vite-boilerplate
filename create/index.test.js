@@ -53,10 +53,10 @@ describe('create-react-vite-turbo', () => {
     assert.match(read(landing, 'apps/web/playwright.config.ts'), /pnpm build --outDir dist-e2e/);
 
     for (const gone of [
-      'src/lib/api',
+      'src/api',
       'src/mocks',
-      'src/lib/query-client.ts',
-      'src/lib/forms.ts',
+      'src/app/query-client.ts',
+      'src/utils/form-errors.ts',
     ]) {
       assert.ok(!existsSync(join(landing, 'apps/web', gone)), gone);
     }
@@ -128,14 +128,14 @@ describe('create-react-vite-turbo', () => {
   });
 
   it('without auth, gives the base project', () => {
-    assert.ok(read(plain, 'apps/web/src/lib/runtime.ts').includes('AuthToken.none'));
+    assert.ok(read(plain, 'apps/web/src/app/runtime.ts').includes('AuthToken.none'));
     assert.ok(!existsSync(join(plain, 'apps/web/src/features/auth')));
   });
 
   it('with auth, adds the feature and wires it in', () => {
     assert.ok(existsSync(join(auth, 'apps/web/src/features/auth/routes.tsx')));
     assert.ok(
-      read(auth, 'apps/web/src/lib/runtime.ts').includes(
+      read(auth, 'apps/web/src/app/runtime.ts').includes(
         'AuthToken.fromGetter(tokenStore.get, tokenStore.reject)',
       ),
     );

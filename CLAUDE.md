@@ -80,7 +80,7 @@ From the root, each runs through turbo in every package that has the script:
 - Packages are source-only (no build step) and are consumed through their `package.json`
   `exports` only (`@repo/ui/components/button`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`),
   never through a relative path into another package.
-- App-specific code stays in the app: its features, its API layer (`src/lib/api`), config,
+- App-specific code stays in the app: its features, its API layer (`src/api`), config,
   mocks and test helpers. Move code into a package only when a second app needs it (see the
   roadmap below).
 
@@ -95,7 +95,7 @@ sonner's toast store is module-level, so two copies mean toasts that never show.
 The web-dev skills (`develop`, `feature-development`, `api-integration`, `ui-development`) refuse
 the monorepo root: run them from inside the app (`cd apps/web`). They treat an app as tier
 `template` only if its `package.json` declares `react`, `vite`, `effect`, `@tanstack/react-query`
-and `react-hook-form`, `src/lib/api/client.ts` contains `ApiClient`, and `src/test/render.tsx`
+and `react-hook-form`, `src/api/client.ts` contains `ApiClient`, and `src/test/render.tsx`
 exists. The app's `package.json` also keeps `packageManager`: it is how the skills know it is pnpm,
 since the lockfile is at the root. `apps/web` must keep all of these.
 
@@ -210,11 +210,11 @@ new project still runs as a demo until these are done:
 - **Backend:** the paragraph above (`VITE_API_URL`, `build` instead of `build:mock`).
 - **Content-Security-Policy:** in `apps/web/vite.config.ts`, narrow `connect-src` from `https:` to
   the API's origin.
-- **Token storage** (with authentication): `apps/web/src/lib/api/token.ts` keeps the bearer token
+- **Token storage** (with authentication): `apps/web/src/api/token.ts` keeps the bearer token
   in localStorage, which any script on the page can read; move it to an httpOnly cookie once the
   backend supports one. There is no refresh token: a 401 ends the session.
 - **Error reporting:** every unexpected error (a route that throws, a 5xx, a response that breaks
-  its schema) goes through `reportError` in `apps/web/src/lib/report-error.ts`, which writes to the
+  its schema) goes through `reportError` in `apps/web/src/utils/report-error.ts`, which writes to the
   console; call the error tracker there and the whole app reports to it.
 - **Repository settings:** turn on Dependabot security updates (`.github/dependabot.yml` already
   opens the weekly update pull requests), and protect `main` with `.github/rulesets/main.json`: no

@@ -1,16 +1,16 @@
 [
   {
-    "file": "apps/web/src/lib/runtime.ts",
-    "find": "import { ApiClient } from '@/lib/api/client';",
-    "replace": "import { ApiClient } from '@/lib/api/client';\nimport { tokenStore } from '@/lib/api/token';"
+    "file": "apps/web/src/app/runtime.ts",
+    "find": "import { ApiClient } from '@/api/client';",
+    "replace": "import { ApiClient } from '@/api/client';\nimport { tokenStore } from '@/api/token';"
   },
   {
-    "file": "apps/web/src/lib/runtime.ts",
+    "file": "apps/web/src/app/runtime.ts",
     "find": " * `AuthToken.none` sends no token; an app with sign-in provides `AuthToken.fromGetter(...)`.",
     "replace": " * `AuthToken.fromGetter(tokenStore.get, tokenStore.reject)` sends the signed-in user's token and\n * drops it when the API answers 401 to it (see features/auth)."
   },
   {
-    "file": "apps/web/src/lib/runtime.ts",
+    "file": "apps/web/src/app/runtime.ts",
     "find": "  Layer.provide(Layer.mergeAll(AppConfig.layer, AuthToken.none)),",
     "replace": "  Layer.provide(\n    Layer.mergeAll(AppConfig.layer, AuthToken.fromGetter(tokenStore.get, tokenStore.reject)),\n  ),"
   },
@@ -42,7 +42,7 @@
   {
     "file": "apps/web/src/app/__tests__/home-page.test.tsx",
     "find": "import { renderRoute } from '@/test/render';",
-    "replace": "import { mockToken } from '@/features/auth/mocks';\nimport { tokenStore } from '@/lib/api/token';\nimport { renderRoute } from '@/test/render';"
+    "replace": "import { tokenStore } from '@/api/token';\nimport { mockToken } from '@/features/auth/mocks';\nimport { renderRoute } from '@/test/render';"
   },
   {
     "file": "apps/web/src/app/__tests__/home-page.test.tsx",
@@ -61,8 +61,8 @@
   },
   {
     "file": "apps/web/CLAUDE.md",
-    "find": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (none until the app has sign-in)",
-    "replace": "    api/auth.ts       AuthToken: the bearer token ApiClient sends (runtime.ts wires it to tokenStore)\n    api/token.ts      tokenStore: the signed-in user's JWT in localStorage"
+    "find": "    auth.ts           AuthToken: the bearer token ApiClient sends (none until the app has sign-in)",
+    "replace": "    auth.ts           AuthToken: the bearer token ApiClient sends (runtime.ts wires it to tokenStore)\n    token.ts          tokenStore: the signed-in user's JWT in localStorage"
   },
   {
     "file": "apps/web/CLAUDE.md",

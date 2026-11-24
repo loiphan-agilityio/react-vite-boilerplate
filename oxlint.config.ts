@@ -18,7 +18,7 @@ const restrictedPaths = [
     name: 'zod',
     message: 'Validation uses Effect Schema (import { Schema } from "effect").',
   },
-  { name: 'axios', message: 'HTTP goes through ApiClient (src/lib/api/client.ts).' },
+  { name: 'axios', message: 'HTTP goes through ApiClient (src/api/client.ts).' },
   { name: '@effect/platform', message: 'Effect 4 ships HTTP in "effect/http".' },
   {
     name: 'msw',

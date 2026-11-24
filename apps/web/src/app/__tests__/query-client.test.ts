@@ -4,7 +4,7 @@ import {
   NetworkError,
   NotFoundError,
   ServerError,
-} from '@/lib/api/errors';
+} from '@/api/errors';
 
 import { createQueryClient } from '../query-client';
 

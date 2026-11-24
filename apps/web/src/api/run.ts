@@ -1,6 +1,6 @@
 import { Cause, type Effect, Exit, Option } from 'effect';
 
-import { type AppServices, runtime } from '@/lib/runtime';
+import { type AppServices, runtime } from '@/app/runtime';
 
 import type { ApiError } from './errors';
 

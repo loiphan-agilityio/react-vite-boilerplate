@@ -1,6 +1,6 @@
-import { NetworkError, ValidationError } from '@/lib/api/errors';
+import { NetworkError, ValidationError } from '@/api/errors';
 
-import { setFormErrors } from '../forms';
+import { setFormErrors } from '../form-errors';
 
 describe('setFormErrors', () => {
   it('puts each server field message under its input', () => {

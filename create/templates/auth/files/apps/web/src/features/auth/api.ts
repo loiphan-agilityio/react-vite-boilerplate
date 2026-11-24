@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 
-import { ApiClient } from '@/lib/api/client';
+import { ApiClient } from '@/api/client';
 
 import { type Credentials, Session, User } from './schemas';
 

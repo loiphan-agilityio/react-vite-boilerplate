@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { runEffect } from '@/lib/api/run';
-import { tokenStore } from '@/lib/api/token';
+import { runEffect } from '@/api/run';
+import { tokenStore } from '@/api/token';
 
 import { getMe, signIn } from './api';
 import type { Credentials } from './schemas';

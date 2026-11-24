@@ -1,7 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
-import { type ApiError, InvalidResponseError, NetworkError, ServerError } from '@/lib/api/errors';
-import { reportError } from '@/lib/report-error';
+import { type ApiError, InvalidResponseError, NetworkError, ServerError } from '@/api/errors';
+import { reportError } from '@/utils/report-error';
 
 declare module '@tanstack/react-query' {
   interface Register {
