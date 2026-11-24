@@ -5,8 +5,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router';
 
-import { toUserMessage, UnauthorizedError } from '@/lib/api/errors';
-import { tokenStore } from '@/lib/api/token';
+import { toUserMessage, UnauthorizedError } from '@/api/errors';
+import { tokenStore } from '@/api/token';
 
 import { meQueryOptions } from '../../queries';
 

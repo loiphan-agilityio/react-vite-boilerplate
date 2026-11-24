@@ -125,7 +125,7 @@ export default defineConfig({
     css: false,
     coverage: {
       provider: 'v8',
-      include: ['src/features/**', 'src/lib/**'],
+      include: ['src/api/**', 'src/app/**', 'src/features/**', 'src/utils/**'],
       exclude: ['**/*.test.{ts,tsx}', '**/*.stories.tsx'],
       thresholds: { lines: 80 },
     },

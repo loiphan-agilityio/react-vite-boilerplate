@@ -2,7 +2,7 @@ import { Toaster } from '@repo/ui/components/sonner';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
 
-import { createQueryClient } from '@/lib/query-client';
+import { createQueryClient } from '@/app/query-client';
 
 /** App-wide providers. The router is rendered inside, so every route can use them. */
 export const AppProviders = ({ children }: { readonly children: ReactNode }) => {

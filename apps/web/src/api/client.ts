@@ -7,7 +7,7 @@ import {
   HttpClientResponse,
 } from 'effect/http';
 
-import { AppConfig } from '@/lib/config';
+import { AppConfig } from '@/app/config';
 
 import { AuthToken } from './auth';
 import {

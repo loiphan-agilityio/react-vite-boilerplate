@@ -1,10 +1,10 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw/http';
 
-import { UnauthorizedError } from '@/lib/api/errors';
-import { runEffect } from '@/lib/api/run';
-import { tokenStore } from '@/lib/api/token';
-import { config } from '@/lib/config';
+import { UnauthorizedError } from '@/api/errors';
+import { runEffect } from '@/api/run';
+import { tokenStore } from '@/api/token';
+import { config } from '@/app/config';
 import { server } from '@/mocks/server';
 import { renderRoute } from '@/test/render';
 

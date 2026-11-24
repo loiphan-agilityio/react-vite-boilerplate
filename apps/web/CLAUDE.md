@@ -15,7 +15,7 @@ commands below from `apps/web`; the root `pnpm check` runs every package through
 | `pnpm dev` | Dev server. `pnpm dev:mock` (Vite mode `mock`, reads `.env.mock`) serves the API from `src/mocks` (MSW), in any shell. |
 | `pnpm lint` | Oxlint (the root `oxlint.config.ts`, type-aware, `--deny-warnings`; also enforces the import rules below and anti-slop) and `prettier --check`. `pnpm lint:fix` fixes what it can and formats; run it before `pnpm check`. |
 | `pnpm typecheck` | `tsc -b` |
-| `pnpm test` | Vitest once, with coverage (≥ 80% lines in `src/features` and `src/lib`). `pnpm test:watch` to watch. |
+| `pnpm test` | Vitest once, with coverage (≥ 80% lines in `src/api`, `src/app`, `src/features` and `src/utils`). `pnpm test:watch` to watch. |
 | `pnpm test:e2e` | Playwright (`e2e/`, Chromium): builds the app on mocks and serves it with `vite preview`; with `E2E_BASE_URL` set, tests that URL instead. `pnpm test:e2e:install` downloads Chromium once per machine. `pnpm test:e2e:report` builds the Allure 3 report of the last run (`allurerc.ts`, into `allure-report/`) and opens it. |
 | `pnpm build` | Typecheck + production build. `pnpm build:mock` builds with MSW on (`.env.mock`): what CI deploys while the app has no backend. A browser that blocks service workers still gets the app, unmocked, with a console warning. |
 | `pnpm storybook` | Storybook on port 6006 (stories render inside `.storybook/story-providers.tsx`, MSW on). |
@@ -29,6 +29,11 @@ Run each command on its own, exactly as written (no pipes or redirects): the too
 ```
 src/
   app/              routes.tsx (createRoutes), providers.tsx, root-layout.tsx, route-error.tsx
+    config.ts         every env value (VITE_*), read statically and validated with Effect Schema;
+                      `config` outside Effect, the `AppConfig` service inside it
+    runtime.ts        AppLayer + the ManagedRuntime
+    query-client.ts   createQueryClient(); query errors are typed as ApiError
+    stale-chunk.ts    reloadOnStaleChunk(): reloads a tab once when a chunk is gone after a deploy
   components/       shared app components, one folder per component (as in a feature, below)
   features/<name>/  one folder per feature (names below are for an `items` feature):
     schemas.ts        Effect Schemas + derived types: Item, ItemList, NewItem / NewItemInput
@@ -43,17 +48,14 @@ src/
         ItemForm.stories.tsx
         __tests__/ItemForm.test.tsx
         types.ts, utils.ts, ...       only what ItemForm alone uses; a second user moves it out
-  lib/
-    config.ts         every env value (VITE_*), read statically and validated with Effect Schema;
-                      `config` outside Effect, the `AppConfig` service inside it
-    runtime.ts        AppLayer + the ManagedRuntime
-    query-client.ts   createQueryClient(); query errors are typed as ApiError
+  api/              the HTTP layer
+    client.ts         ApiClient: the only way to call the backend
+    auth.ts           AuthToken: the bearer token ApiClient sends (none until the app has sign-in)
+    errors.ts         ApiError union + toUserMessage()
+    run.ts            runEffect(effect, signal): Effect → Promise for TanStack Query
+  utils/            pure functions two or more features use
     report-error.ts   reportError(): the one exit for an unexpected error (console, or a tracker)
-    forms.ts          setFormErrors(): API errors → React Hook Form
-    api/client.ts     ApiClient: the only way to call the backend
-    api/auth.ts       AuthToken: the bearer token ApiClient sends (none until the app has sign-in)
-    api/errors.ts     ApiError union + toUserMessage()
-    api/run.ts        runEffect(effect, signal): Effect → Promise for TanStack Query
+    form-errors.ts    setFormErrors(): API errors → React Hook Form
   mocks/            handlers.ts (all feature handlers), server.ts (Vitest), browser.ts (dev)
   test/             setup.ts, render.tsx (renderRoute, renderWithProviders)
 e2e/                Playwright specs: home.spec.ts, then <feature>.spec.ts per feature
@@ -94,7 +96,7 @@ ApiClient → effect/http`
 - **Unexpected errors are reported in one place:** `createQueryClient` reports a 5xx
   `ServerError` or an `InvalidResponseError` from any query or mutation, and RouterProvider's
   `onError` (`reportRouteError`) a route that throws, both through `reportError`, all in
-  `src/lib/report-error.ts`. A feature shows its error state and never logs or reports an API
+  `src/utils/report-error.ts`. A feature shows its error state and never logs or reports an API
   error itself; a 4xx or a `NetworkError` is the user's to see, not a bug.
 - **Query keys come from a key factory** in `queries.ts`, and a key holds every value its
   `queryFn` reads (an id, a filter): a value left out serves another value's cached data, and no
@@ -217,7 +219,7 @@ and concepts that the guide doesn't cover, search through the source code in
 
 Skills (the `web-dev` plugin, or its `skills/`, `references/`, `scripts/` and `agents/` copied
 into `.claude/` or `~/.claude/`). They run in this folder (`apps/web`) and refuse the monorepo
-root (see `../../CLAUDE.md`). To stay tier `template` for them, this app must keep `src/lib/api/client.ts`
+root (see `../../CLAUDE.md`). To stay tier `template` for them, this app must keep `src/api/client.ts`
 (`ApiClient`), `src/test/render.tsx`, and in its `package.json` the stack dependencies (`react`,
 `vite`, `effect`, `@tanstack/react-query`, `react-hook-form`) and `packageManager`.
 

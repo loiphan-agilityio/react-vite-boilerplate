@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 
-import { tokenStore } from '@/lib/api/token';
+import { tokenStore } from '@/api/token';
 import { server } from '@/mocks/server';
 import { renderWithProviders } from '@/test/render';
 

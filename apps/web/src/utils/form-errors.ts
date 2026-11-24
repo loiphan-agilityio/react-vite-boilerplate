@@ -1,6 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 
-import { type ApiError, toUserMessage, ValidationError } from '@/lib/api/errors';
+import { type ApiError, toUserMessage, ValidationError } from '@/api/errors';
 
 /**
  * Shows an API failure on a React Hook Form form.

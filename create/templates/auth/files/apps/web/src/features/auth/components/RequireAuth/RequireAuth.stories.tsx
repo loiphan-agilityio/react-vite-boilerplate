@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { tokenStore } from '@/lib/api/token';
+import { tokenStore } from '@/api/token';
 
 import { authMocks, mockToken } from '../../mocks';
 import { RequireAuth } from '.';

@@ -19,4 +19,4 @@ against this folder, port what applies, update the commit above, and run `pnpm l
 `pnpm check`.
 
 Where a rule is turned off for one line, the comment above the `oxlint-disable-next-line` says why
-(`apps/web/src/lib/api/client.ts`: a request body is the outbound JSON boundary).
+(`apps/web/src/api/client.ts`: a request body is the outbound JSON boundary).

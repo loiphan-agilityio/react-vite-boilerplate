@@ -1,7 +1,7 @@
 import { Effect, Layer, Schema } from 'effect';
 import { http, HttpResponse } from 'msw/http';
 
-import { AppConfig, config } from '@/lib/config';
+import { AppConfig, config } from '@/app/config';
 import { server } from '@/mocks/server';
 
 import { AuthToken } from '../auth';

@@ -60,7 +60,7 @@ push to `main`.
 | 🎨 | **UI** | shadcn/ui on Tailwind CSS 4 (CSS-first theme tokens), shared as the source-only package `@repo/ui`; lucide icons, sonner toasts, a dark theme. |
 | 🔌 | **Data** | Effect 4 (typed HTTP client `ApiClient`, config and errors), TanStack Query 5 (server state), React Hook Form 7 with Effect Schema validation. Every request goes through `ApiClient`; lint rejects `fetch` and `axios`. |
 | 🎭 | **API mocks** | MSW 3, one set of handlers for the dev server, the tests and the stories, so the app runs with no backend. |
-| ✅ | **Quality** | Vitest 5 and Testing Library (coverage gate: 80% of lines in `src/features` and `src/lib`), Playwright with axe accessibility checks, Allure 3 reports, Storybook 10, Lighthouse. |
+| ✅ | **Quality** | Vitest 5 and Testing Library (coverage gate: 80% of lines in `src/api`, `src/app`, `src/features` and `src/utils`), Playwright with axe accessibility checks, Allure 3 reports, Storybook 10, Lighthouse. |
 | 🛠️ | **Tooling** | Oxlint (type-aware, plus the vendored anti-slop rules, no ESLint), Prettier, Husky, lint-staged, commitlint, Dependabot. |
 
 ## ⚡ Quick start
@@ -117,7 +117,7 @@ scores a deployed or previewed page (CI does it on every preview deploy). While 
 ## 📁 Project structure
 
 ```
-apps/web/                     the app (package `web`): src/app, src/features, src/lib,
+apps/web/                     the app (package `web`): src/app, src/api, src/features, src/utils,
                               e2e/ (Playwright), .storybook/, public/_headers (Pages headers)
 packages/ui/                  @repo/ui: shadcn components, cn(), Tailwind theme tokens
 packages/typescript-config/   shared tsconfig bases
