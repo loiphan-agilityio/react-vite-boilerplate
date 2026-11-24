@@ -67,7 +67,7 @@ The list is closed: ask before adding a new top-level folder.
 | `styles/` | `index.css`: imports `@repo/ui/globals.css` and adds app-only tokens. |
 
 A layout lives in `src/app/<Name>Layout/` (one only a feature uses lives in that feature); an
-app-wide provider is mounted in `src/app/AppProviders`. An app has only the folders it uses.
+app-wide provider is mounted with the app's providers in `src/app/`. An app has only the folders it uses.
 
 ### A feature folder
 
