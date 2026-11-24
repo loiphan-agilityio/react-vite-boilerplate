@@ -25,12 +25,25 @@ turbo.json              task graph, caching, env (VITE_*) and inputs (.env*)
 .github/workflows/ci.yml  CI/CD: gates, Cloudflare Pages deploy of apps/web, Lighthouse, production, then e2e on it
 .husky/                 pre-commit (lint-staged, then pnpm typecheck), commit-msg (commitlint),
                         pre-push (refuses main, dev, stag, prod and their long names)
-.claude/                settings.json: the pnpm commands Claude runs without a permission prompt,
+.claude/                rules/: the conventions every app and package follows (below, "Rules");
+                        settings.json: the pnpm commands Claude runs without a permission prompt,
                         and a hook that runs Prettier on each file Claude writes (hooks/format.mjs).
                         Claude Code reads it only in sessions started here; apps/web/.claude/
                         settings.json does the same for sessions started in the app
 .prettierrc.json, .prettierignore, .gitignore, .gitattributes, skills-lock.json
 ```
+
+## Rules: read the matching file before the work
+
+Each topic has one home in `.claude/rules/`; nothing in a `CLAUDE.md` repeats it. The web-dev
+plugin carries the same files in its `references/rules/` (copied from here), for its skills.
+
+| File | Read before |
+|---|---|
+| [`code-style.md`](.claude/rules/code-style.md) | writing any code: functions, handlers, naming, imports, comments |
+| [`structure.md`](.claude/rules/structure.md) | adding a file, component, hook, helper, constant or type: reuse first, where it goes, component folders |
+| [`testing.md`](.claude/rules/testing.md) | any change: which tests it ships, how to write them, end-to-end specs |
+| [`git-workflow.md`](.claude/rules/git-workflow.md) | naming a branch, committing, opening a pull request |
 
 ## Commands
 
