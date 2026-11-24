@@ -69,25 +69,11 @@ The UI kit lives in `packages/ui` (`@repo/ui`): shadcn components in `packages/u
 `@source '..';`. Add a shadcn component with `pnpm exec shadcn add <name>`: run it in `apps/web`;
 it writes into `packages/ui/src/components`. Never edit those files by hand.
 
-## Code style
+## Code style, structure, tests and Git
 
-Lint enforces it, and `func-style` has no autofix, so write it this way from the start:
-
-- Arrow functions only: `export const ItemList = () => { ... };`, `export const useX = () => ...`.
-  `function*` stays only inside `Effect.gen` / `Effect.fn`. A component that only returns markup
-  returns it directly: `export const Page = () => (<section>...</section>);`.
-- Destructure objects (`const { title } = item`, props, callback arguments), use shorthand
-  properties, template literals instead of `+`, `??` / `?.`, `const` (never `var`), `===`.
-- A handler that returns nothing gets braces: `onClick={() => { setOpen(true); }}`, not
-  `onClick={() => setOpen(true)}` (`no-confusing-void-expression`).
-- Inline type imports (`import { type Item, NewItem } from './schemas'`); `pnpm lint:fix`
-  fixes most of the rest and formats.
-- anti-slop (part of `pnpm lint`) rejects low-evidence code: a type assertion
-  without a `// SAFETY:` comment on the invariant, `as unknown as`, `unknown` or `object` in a
-  function's parameters or return type (parse at the boundary instead; a catch argument is named
-  `cause`), `typeof` narrowing outside a parser, `vi.mock` of a module, comparing or building
-  `_tag` by hand (use `instanceof` the error class, `Match`, or the class constructor). It also
-  wants a blank line before a `return` and around multi-line statements: `pnpm lint:fix` adds them.
+In the root `.claude/rules/` (index in `../../CLAUDE.md`, "Rules"): `code-style.md`,
+`structure.md`, `testing.md`, `git-workflow.md`. This file holds only what is specific to this
+app: its layout, data flow, test harness and stories.
 
 ## How data flows
 
